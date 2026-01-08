@@ -21,30 +21,8 @@ class FlowCanvas {
       onNodeCopy: options.onNodeCopy || null, // Callback when node is copied
       onNodeCut: options.onNodeCut || null, // Callback when node is cut
       selectedNodeId: null,
-      buildMode: options.buildMode || 'build',
-      isTestFlowOrScenarioView: options.isTestFlowOrScenarioView || (() => false), // Function to check if in test flow/scenario view
-      onOutputsChange: options.onOutputsChange || null, // Callback when outputs change
-      onChange: options.onChange || null, // Callback when any changes are made (for Build mode Save button)
-      enableSelectiveTesting: options.enableSelectiveTesting === true // Enable selective testing feature (start/end point selection)
+      onChange: options.onChange || null // Callback when any changes are made (for Build mode Save button)
     };
-    
-    // Store outputs for each node (keyed by nodeId)
-    this.outputs = {};
-    
-    // Track execution path for connector lines
-    this.executionPath = []; // Array of connector indices that were executed (legacy support)
-    
-    // Track multiple path highlights for test scenarios
-    // Structure: { [scenarioId]: { status: 'passed'|'failed'|'error'|'not-run', connectors: [indices] } }
-    this.pathHighlights = {};
-    
-    // Store active tab state for element configuration panel (in test mode)
-    // This allows preserving tab selection when switching between elements
-    this.activeTab = null; // 'properties' or 'outputs'
-    
-    // Track test start and end points
-    this.testStartPoint = null; // Node ID for test start point (only one allowed)
-    this.testEndPoint = null; // Node ID for test end point (only one allowed)
     
     // Zoom state
     this.zoomLevel = 1; // Current zoom level (1 = 100%)
@@ -57,13 +35,6 @@ class FlowCanvas {
     this.cachedQueries = {};
     this.eventListenersAttached = false;
     this.renderDebounceTimeout = null;
-    this.outputsInputDebounce = {}; // Debounce timers for output input handlers
-    
-    // Initialize flags for legend position updates
-    this._legendUpdateDisabled = false;
-    this._panelOpening = false;
-    this._panelOpeningTimeout = null;
-    this._observerCallbackPending = false;
     
     if (this.container) {
       this.render();
@@ -119,8 +90,6 @@ class FlowCanvas {
   }
   
   render() {
-    const modeClass = this.config.buildMode === 'test' ? 'test-mode' : 'build-mode';
-    
     // Performance: Cache DOM queries
     let wrapper = this.cachedQueries.wrapper || this.container.querySelector('.flow-canvas-wrapper');
     let canvasContent = this.cachedQueries.canvasContent || this.container.querySelector('#flow-canvas-content');
@@ -136,7 +105,7 @@ class FlowCanvas {
     if (!wrapper) {
       // First render - create full structure
       this.container.innerHTML = `
-        <div class="flow-canvas-wrapper ${modeClass}">
+        <div class="flow-canvas-wrapper build-mode">
           <div id="flow-panel-left-container" class="flow-panel-container"></div>
           <div class="flow-canvas-main">
             <div class="flow-canvas-content" id="flow-canvas-content">
@@ -166,81 +135,16 @@ class FlowCanvas {
             </div>
           </div>
           <div id="flow-panel-right-container" class="flow-panel-container"></div>
-          <div id="run-loading-overlay" style="display: none;">
-            <div class="run-loading-content">
-              <div class="slds-spinner_container">
-                <div class="slds-spinner slds-spinner_large slds-spinner_brand" role="status">
-                  <span class="slds-assistive-text">Loading</span>
-                  <div class="slds-spinner__dot-a"></div>
-                  <div class="slds-spinner__dot-b"></div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       `;
     } else {
-    // Update existing structure - preserve panel containers (never recreate them)
-    // Only update the wrapper class and canvas content
-    wrapper.className = `flow-canvas-wrapper ${modeClass}`;
-    if (canvasContent) {
-      // Update only the canvas content, preserving panels
-      canvasContent.innerHTML = this.renderNodes();
-      // Restore execution path styling after re-render
-      this.updateConnectorStyles();
-    } else {
-        // Canvas content doesn't exist, create it without touching panel containers
-        const canvasMain = wrapper.querySelector('.flow-canvas-main');
-        if (canvasMain) {
-          const existingZoomControls = canvasMain.querySelector('.flow-canvas-zoom-controls');
-          canvasMain.innerHTML = `
-            <div class="flow-canvas-content" id="flow-canvas-content">
-              ${this.renderNodes()}
-            </div>
-            <div class="flow-canvas-zoom-controls" id="flow-canvas-zoom-controls">
-              <div class="slds-button-group">
-                <button class="slds-button slds-button_icon slds-button_icon-border" title="Zoom Out" data-action="zoom-out" id="canvas-zoom-out-button">
-                  <svg class="slds-button__icon" aria-hidden="true">
-                    <use href="#minus"></use>
-                  </svg>
-                  <span class="slds-assistive-text">Zoom Out</span>
-                </button>
-                <button class="slds-button slds-button_icon slds-button_icon-border" title="Fit to Canvas" data-action="zoom-fit" id="canvas-zoom-fit-button">
-                  <svg class="slds-button__icon" aria-hidden="true">
-                    <use href="#contract_alt"></use>
-                  </svg>
-                  <span class="slds-assistive-text">Fit to Canvas</span>
-                </button>
-                <button class="slds-button slds-button_icon slds-button_icon-border" title="Zoom In" data-action="zoom-in" id="canvas-zoom-in-button">
-                  <svg class="slds-button__icon" aria-hidden="true">
-                    <use href="#add"></use>
-                  </svg>
-                  <span class="slds-assistive-text">Zoom In</span>
-                </button>
-              </div>
-            </div>
-          `;
-        }
-      }
-      
-      // Ensure loading overlay exists (preserve if already there, create if not)
-      let overlay = wrapper.querySelector('#run-loading-overlay');
-      if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'run-loading-overlay';
-        overlay.style.display = 'none';
-        overlay.innerHTML = `
-          <div class="run-loading-content">
-            <div class="slds-spinner_container">
-              <div class="slds-spinner slds-spinner_large slds-spinner_brand" role="status">
-                <span class="slds-assistive-text">Loading</span>
-                <div class="slds-spinner__dot-a"></div>
-                <div class="slds-spinner__dot-b"></div>
-              </div>
-            </div>
-          </div>
-        `;
-        wrapper.appendChild(overlay);
+      // Update existing structure - preserve panel containers (never recreate them)
+      // Only update the canvas content
+      wrapper.className = 'flow-canvas-wrapper build-mode';
+      if (canvasContent) {
+        // Update only the canvas content, preserving panels
+        canvasContent.innerHTML = this.renderNodes();
+        this.updateConnectorStyles();
       }
     }
     
@@ -249,14 +153,7 @@ class FlowCanvas {
     this.updateZoomControlsPosition();
     this.updateZoomButtonState();
     
-    // Update legend position after render (but only if not disabled)
-    // Skip if panel is currently opening to avoid interference
-    if (!this._legendUpdateDisabled) {
-      this.updateLegendPosition();
-    }
-    
-    // Reapply current zoom level to ensure consistency across mode switches
-    // This ensures zoom works the same way in both build and test mode
+    // Reapply current zoom level if set
     if (this.zoomLevel !== undefined) {
       this.applyZoom(this.zoomLevel);
     }
@@ -282,123 +179,27 @@ class FlowCanvas {
   
   renderNode(node, isSelected) {
     const selectedClass = isSelected ? 'selected' : '';
-    const iconClass = this.getIconClass(node.icon);
     
-    // In Build mode, hide all badges
-    const isBuildMode = this.config.buildMode === 'build';
+    // Build mode menu items
+    const menuItems = `
+      <li class="slds-dropdown__item" role="presentation">
+        <a href="javascript:void(0);" role="menuitem" data-action="copy-element" data-node-id="${node.id}">
+          <span class="slds-truncate" title="Copy Element">Copy Element</span>
+        </a>
+      </li>
+      <li class="slds-dropdown__item" role="presentation">
+        <a href="javascript:void(0);" role="menuitem" data-action="cut-element" data-node-id="${node.id}">
+          <span class="slds-truncate" title="Cut Element">Cut Element</span>
+        </a>
+      </li>
+      <li class="slds-dropdown__item" role="presentation">
+        <a href="javascript:void(0);" role="menuitem" data-action="delete-element" data-node-id="${node.id}">
+          <span class="slds-truncate" title="Delete Element">Delete Element</span>
+        </a>
+      </li>
+    `;
     
-    // Check if in test flow/scenario view
-    // IMPORTANT: This is called during render, so it reflects the CURRENT state of currentTestView
-    const isTestFlowOrScenarioView = typeof this.config.isTestFlowOrScenarioView === 'function' 
-      ? this.config.isTestFlowOrScenarioView() 
-      : false;
-    
-    // Check if this node is outside the test scope (before start or after latest end point)
-    const nodeIndex = this.config.nodes.findIndex(n => n.id === node.id);
-    const startIndex = this.testStartPoint ? this.config.nodes.findIndex(n => n.id === this.testStartPoint) : -1;
-    
-    // Check if node is after the end point (node is out of scope if it's after the end point)
-    const endIndex = this.testEndPoint ? this.config.nodes.findIndex(n => n.id === this.testEndPoint) : -1;
-    
-    // Gray out elements before start point (if start point is set)
-    const isBeforeStart = startIndex >= 0 && nodeIndex < startIndex;
-    // Gray out elements after end point (if end point is set)
-    const isAfterEnd = endIndex >= 0 && nodeIndex > endIndex;
-    const isOutOfScope = isBeforeStart || isAfterEnd;
-    // Apply out-of-scope class in test mode (even if not in Test Flow/Test Scenario view, for selective testing)
-    const outOfScopeClass = (!isBuildMode && isOutOfScope) ? 'flow-node-out-of-scope' : '';
-    
-    
-    // Check if this node is a test start or end point
-    const isTestStartPoint = this.testStartPoint === node.id;
-    const isTestEndPoint = this.testEndPoint === node.id;
-    
-    // Check if mock outputs are enabled for this node
-    const nodeOutputs = this.outputs[node.id] || {};
-    const mockOutputsEnabled = nodeOutputs.mockOutputs === true;
-    const mockOutputsBadge = mockOutputsEnabled ? '<div class="flow-node-badge">Output Mocked</div>' : '';
-    
-    // Combine existing badge with mock outputs badge (only in Test mode)
-    // Note: Test Start and Test End badges are shown on the connector, not on the element card
-    const badges = [];
-    if (!isBuildMode) {
-      if (node.badge) {
-        badges.push(`<div class="flow-node-badge">${node.badge}</div>`);
-      }
-      if (mockOutputsEnabled) {
-        badges.push('<div class="flow-node-badge">Output Mocked</div>');
-      }
-    }
-    const badgesHtml = badges.join('');
-    
-    // Add three-dot menu button - different options for Build vs Test mode
-    let menuItems = '';
-    if (isBuildMode) {
-      // Build mode menu items
-      menuItems = `
-        <li class="slds-dropdown__item" role="presentation">
-          <a href="javascript:void(0);" role="menuitem" data-action="copy-element" data-node-id="${node.id}">
-            <span class="slds-truncate" title="Copy Element">Copy Element</span>
-          </a>
-        </li>
-        <li class="slds-dropdown__item" role="presentation">
-          <a href="javascript:void(0);" role="menuitem" data-action="cut-element" data-node-id="${node.id}">
-            <span class="slds-truncate" title="Cut Element">Cut Element</span>
-          </a>
-        </li>
-        <li class="slds-dropdown__item" role="presentation">
-          <a href="javascript:void(0);" role="menuitem" data-action="delete-element" data-node-id="${node.id}">
-            <span class="slds-truncate" title="Delete Element">Delete Element</span>
-          </a>
-        </li>
-      `;
-    } else {
-      // Test mode menu items - show "Set Start Point Before" and "Set an End Point After"
-      // Show these menu items when selective testing is enabled
-      // For selective testing feature
-      const enableSelectiveTesting = this.config.enableSelectiveTesting === true;
-      
-      // Show menu items when selective testing is enabled
-      if (enableSelectiveTesting) {
-        // Show context-aware menu items based on current start/end point status
-        const startPointAction = isTestStartPoint ? 'remove-start-point' : 'set-start-point';
-        const startPointLabel = isTestStartPoint ? 'Remove Start Point Before' : 'Set Start Point Before';
-        const endPointAction = isTestEndPoint ? 'remove-end-point' : 'set-end-point';
-        const endPointLabel = isTestEndPoint ? 'Remove End Point After' : 'Set an End Point After';
-        
-        // Check if current node is right before the end point or the End element - if so, disable "Set an End Point After"
-        const currentNodeIndex = this.config.nodes.findIndex(n => n.id === node.id);
-        const endPointIndex = this.testEndPoint ? this.config.nodes.findIndex(n => n.id === this.testEndPoint) : -1;
-        const nextNode = currentNodeIndex >= 0 && currentNodeIndex < this.config.nodes.length - 1 
-          ? this.config.nodes[currentNodeIndex + 1] 
-          : null;
-        // Check if next node is the End element (type === 'end') or if current node is right before the test end point
-        const isRightBeforeEndElement = !isTestEndPoint && nextNode && nextNode.type === 'end';
-        const isRightBeforeEndPoint = !isTestEndPoint && this.testEndPoint && currentNodeIndex >= 0 && endPointIndex >= 0 && currentNodeIndex + 1 === endPointIndex;
-        const endPointDisabled = (isRightBeforeEndElement || isRightBeforeEndPoint) ? 'aria-disabled="true" class="slds-is-disabled"' : '';
-        
-        menuItems = `
-          <li class="slds-dropdown__item" role="presentation">
-            <a href="javascript:void(0);" role="menuitem" data-action="${startPointAction}" data-node-id="${node.id}">
-              <span class="slds-truncate" title="${startPointLabel}">${startPointLabel}</span>
-            </a>
-          </li>
-          <li class="slds-dropdown__item" role="presentation">
-            <a href="javascript:void(0);" role="menuitem" data-action="${endPointAction}" data-node-id="${node.id}" ${endPointDisabled}>
-              <span class="slds-truncate" title="${endPointLabel}">${endPointLabel}</span>
-            </a>
-          </li>
-        `;
-      }
-    }
-    
-    // Show menu in Build mode or Test mode
-    // In test mode, always show menu button (menu items will only appear in Test Flow or Test Scenario Detail view when selective testing is enabled)
-    const isTestMode = this.config.buildMode === 'test';
-    // isTestFlowOrScenarioView already declared above, reuse it
-    const hasMenuItems = menuItems.trim().length > 0;
-    // Show menu button if: (Build mode with menu items) OR (Test mode)
-    const menuButton = (isBuildMode && hasMenuItems) || isTestMode ? `
+    const menuButton = `
       <div class="flow-node-menu-trigger">
         <button class="slds-button slds-button_icon slds-button_icon-default slds-button_icon-medium" type="button" title="More Actions" data-node-menu="${node.id}" aria-haspopup="true">
           <svg class="slds-button__icon" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -414,10 +215,10 @@ class FlowCanvas {
           </ul>
         </div>
       </div>
-    ` : '';
+    `;
     
     return `
-      <div class="flow-node ${selectedClass} ${outOfScopeClass}" data-node-id="${node.id}">
+      <div class="flow-node ${selectedClass}" data-node-id="${node.id}">
         <div class="flow-node-card">
           <div class="flow-node-header">
             <div class="flow-node-icon" style="background-color: ${node.iconBg}">
@@ -429,79 +230,21 @@ class FlowCanvas {
             </div>
             ${menuButton}
           </div>
-          ${badgesHtml ? `<div class="flow-node-badges">${badgesHtml}</div>` : ''}
+          ${node.badge ? `<div class="flow-node-badges"><div class="flow-node-badge">${node.badge}</div></div>` : ''}
         </div>
       </div>
     `;
   }
   
   renderConnector(index) {
-    // Check if this connector is part of the execution path
-    const isExecuted = this.executionPath.includes(index);
-    const executedClass = isExecuted ? 'flow-connector-line-executed' : '';
-    
-    // Check if this connector should show start or end badge
-    // Connector at index i is below node i and above node i+1
-    // Start badge: show on connector above the start point node (connector i where node i+1 is start point)
-    // End badge: show on connector below the end point node (connector i where node i is end point)
-    const nodeAfterConnector = this.config.nodes[index + 1];
-    const nodeBeforeConnector = this.config.nodes[index];
-    const isStartPoint = nodeAfterConnector && this.testStartPoint === nodeAfterConnector.id;
-    const isEndPoint = nodeBeforeConnector && this.testEndPoint === nodeBeforeConnector.id;
-    
-    let badgeHtml = '';
-    let hasBadge = false;
-    let badgeType = null;
-    if (isStartPoint) {
-      hasBadge = true;
-      badgeType = 'start';
-      badgeHtml = `
-        <div class="flow-connector-badge flow-connector-badge-start" data-badge-type="start" title="Double-click to remove">
-          <svg class="slds-icon slds-icon_xx-small" aria-hidden="true">
-            <use href="#play"></use>
-          </svg>
-          <span>Test Start</span>
-        </div>
-      `;
-    } else if (isEndPoint) {
-      hasBadge = true;
-      badgeType = 'end';
-      badgeHtml = `
-        <div class="flow-connector-badge flow-connector-badge-end" data-badge-type="end" title="Double-click to remove">
-          <svg class="slds-icon slds-icon_xx-small" aria-hidden="true">
-            <use href="#stop"></use>
-          </svg>
-          <span>Test End</span>
-        </div>
-      `;
-    }
-    
-    // Add class to make connector 2x longer if it has a badge
-    const badgeClass = hasBadge ? 'flow-connector-with-badge' : '';
-    
-    // When there's a badge, split the line into two parts: above and below
-    if (hasBadge) {
-      return `
-        <div class="flow-connector ${badgeClass}" data-connector-index="${index}" data-badge-type="${badgeType}">
-          <div class="flow-connector-line flow-connector-line-above"></div>
-          ${badgeHtml}
-          <div class="flow-connector-line flow-connector-line-below"></div>
-          <button class="flow-connector-button" title="Add Element">
-            ${this.getIconSVG('add')}
-          </button>
-        </div>
-      `;
-    } else {
-      return `
-        <div class="flow-connector ${badgeClass}" data-connector-index="${index}">
-          <div class="flow-connector-line ${executedClass}"></div>
-          <button class="flow-connector-button" title="Add Element">
-            ${this.getIconSVG('add')}
-          </button>
-          ${badgeHtml}
-        </div>
-      `;
-    }
+    return `
+      <div class="flow-connector" data-connector-index="${index}">
+        <div class="flow-connector-line"></div>
+        <button class="flow-connector-button" title="Add Element">
+          ${this.getIconSVG('add')}
+        </button>
+      </div>
+    `;
   }
   
   setExecutionPath(connectorIndices) {
@@ -933,51 +676,16 @@ class FlowCanvas {
     
     const titleValue = escapeHtml(selectedNode.title);
     const nodeIdAttr = escapeHtml(selectedNode.id);
-    // Show Outputs tab only in element configuration panel (right panel) when in Test Flow or Test Scenario Detail view
-    // Note: This method (getNodePropertiesContent) is only called for the right panel, so Outputs tab will never appear in left panel
-    const isTestFlowOrScenarioView = typeof this.config.isTestFlowOrScenarioView === 'function' 
-      ? this.config.isTestFlowOrScenarioView() 
-      : false;
-    
-    // In Test Mode, preserve the active tab state when switching between elements
-    // If user was on Outputs tab, keep Outputs tab active; if on Properties tab, keep Properties tab active
-    // Default to Outputs tab in test mode if no tab has been selected yet
-    let activeTabName = null;
-    if (isTestFlowOrScenarioView) {
-      // Use stored active tab if available, otherwise default to 'outputs'
-      activeTabName = this.activeTab || 'outputs';
-    } else {
-      // In build mode, always default to Properties tab
-      activeTabName = 'properties';
-    }
-    
-    const propertiesTabActive = activeTabName === 'properties' ? 'slds-is-active' : '';
-    const outputsTabActive = activeTabName === 'outputs' ? 'slds-is-active' : '';
-    const propertiesContentDisplay = activeTabName === 'properties' ? '' : 'display: none;';
-    const outputsContentDisplay = activeTabName === 'outputs' ? '' : 'display: none;';
-    const outputsTab = isTestFlowOrScenarioView 
-      ? `
-        <li class="slds-tabs_default__item ${outputsTabActive}" title="Outputs" role="presentation">
-          <a class="slds-tabs_default__link flow-node-properties-tab" href="javascript:void(0);" role="tab" tabindex="${outputsTabActive ? '0' : '-1'}" aria-selected="${outputsTabActive ? 'true' : 'false'}" aria-controls="tab-outputs-${nodeIdAttr}" id="tab-outputs-${nodeIdAttr}__item" data-tab="outputs">Outputs</a>
-        </li>
-      `
-      : '';
-    
-    // Determine if fields should be read-only based on build mode
-    const isTestMode = this.config.buildMode === 'test';
-    const readonlyAttr = isTestMode ? 'readonly' : '';
-    const disabledAttr = isTestMode ? 'disabled' : '';
     
     return `
       <div class="flow-sidebar-content">
         <div class="slds-tabs_default">
           <ul class="slds-tabs_default__nav" role="tablist">
-            <li class="slds-tabs_default__item ${propertiesTabActive}" title="Properties" role="presentation">
-              <a class="slds-tabs_default__link flow-node-properties-tab" href="javascript:void(0);" role="tab" tabindex="${propertiesTabActive ? '0' : '-1'}" aria-selected="${propertiesTabActive ? 'true' : 'false'}" aria-controls="tab-properties-${nodeIdAttr}" id="tab-properties-${nodeIdAttr}__item" data-tab="properties">Properties</a>
+            <li class="slds-tabs_default__item slds-is-active" title="Properties" role="presentation">
+              <a class="slds-tabs_default__link flow-node-properties-tab" href="javascript:void(0);" role="tab" tabindex="0" aria-selected="true" aria-controls="tab-properties-${nodeIdAttr}" id="tab-properties-${nodeIdAttr}__item" data-tab="properties">Properties</a>
             </li>
-            ${outputsTab}
           </ul>
-          <div id="tab-properties-${nodeIdAttr}" class="slds-tabs_default__content" role="tabpanel" aria-labelledby="tab-properties-${nodeIdAttr}__item" style="${propertiesContentDisplay}">
+          <div id="tab-properties-${nodeIdAttr}" class="slds-tabs_default__content" role="tabpanel" aria-labelledby="tab-properties-${nodeIdAttr}__item">
             <div class="slds-form-element">
               <label class="slds-form-element__label" for="node-title-${nodeIdAttr}">
                 <span class="slds-form-element__label-text">Label</span>
@@ -987,16 +695,10 @@ class FlowCanvas {
                        id="node-title-${nodeIdAttr}"
                        class="slds-input" 
                        value="${titleValue}" 
-                       data-property="title"
-                       ${readonlyAttr} />
+                       data-property="title" />
               </div>
             </div>
           </div>
-          ${isTestFlowOrScenarioView ? `
-          <div id="tab-outputs-${nodeIdAttr}" class="slds-tabs_default__content" role="tabpanel" aria-labelledby="tab-outputs-${nodeIdAttr}__item" style="${outputsContentDisplay}">
-            ${this.renderOutputsTab(selectedNode)}
-          </div>
-          ` : ''}
         </div>
       </div>
     `;
