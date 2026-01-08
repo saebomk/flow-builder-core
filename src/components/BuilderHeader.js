@@ -12,13 +12,11 @@ class BuilderHeader {
       appName: options.appName || 'Flow Builder',
       flowName: options.flowName || 'Flow Name',
       showPageType: options.showPageType || false,
-      pageType: options.pageType || 'Test Flow',
+      pageType: options.pageType || 'Flow',
       showHelp: options.showHelp !== false,
-      buildMode: options.buildMode || 'build',
       onBack: options.onBack || null,
       onFlowSelect: options.onFlowSelect || null,
       onHelp: options.onHelp || null,
-      onModeToggle: options.onModeToggle || null,
       onToolbox: options.onToolbox || null,
       onErrors: options.onErrors || null,
       onMultiSelect: options.onMultiSelect || null,
@@ -31,27 +29,13 @@ class BuilderHeader {
       onSaveAsNewVersion: options.onSaveAsNewVersion || null,
       onSave: options.onSave || null,
       onActivate: options.onActivate || null,
-      onTestFlow: options.onTestFlow || null,
-      testFlowView: options.testFlowView || false, // Whether currently in Test Flow view
-      testScenarioView: options.testScenarioView || false, // Whether currently in Test Scenario view
-      testScenarioName: options.testScenarioName || null, // Name of the current test scenario
-      onSaveTestScenario: options.onSaveTestScenario || null,
-      onSaveAsNewScenario: options.onSaveAsNewScenario || null,
-      onRunTest: options.onRunTest || null,
-      onStartNewRun: options.onStartNewRun || null,
-      onTestScenarios: options.onTestScenarios || null,
       toolboxOpen: options.toolboxOpen || false,
       errorsOpen: options.errorsOpen || false,
-      testScenariosOpen: options.testScenariosOpen || false,
       layoutMode: options.layoutMode || 'auto-layout', // 'auto-layout' or 'free-form'
       onLayoutChange: options.onLayoutChange || null,
-      saveButtonDisabled: options.saveButtonDisabled !== undefined ? options.saveButtonDisabled : false, // Default to enabled (for Test Scenario Save button)
-      buildSaveButtonDisabled: options.buildSaveButtonDisabled !== undefined ? options.buildSaveButtonDisabled : true, // Default to disabled (for Build mode Save button)
-      testHasRun: options.testHasRun || false, // Track if a test has been run (affects Run button style)
+      saveButtonDisabled: options.saveButtonDisabled !== undefined ? options.saveButtonDisabled : true, // Default to disabled
       lastSavedDate: options.lastSavedDate || null, // Last saved date (Date object or null)
-      status: options.status || 'Inactive', // Status badge text (default: 'Inactive')
-      runResultTimestamp: options.runResultTimestamp || null, // Timestamp of the run result (Date object or null)
-      runResultStatus: options.runResultStatus || null // Status of the run result ('passed', 'failed', etc.)
+      status: options.status || 'Inactive' // Status badge text (default: 'Inactive')
     };
     
     // Bind the click handler so we can remove it later
@@ -169,13 +153,6 @@ class BuilderHeader {
           </li>
         </ul>
       </nav>
-      ${(this.config.testFlowView || this.config.testScenarioView) ? `
-        <div class="slds-builder-header__item slds-has-flexi-truncate">
-          <h1 class="slds-builder-header__item-label">
-            ${this.renderTestViewLabel()}
-          </h1>
-        </div>
-      ` : ''}
       ${this.config.showPageType ? `
         <div class="slds-builder-header__item slds-has-flexi-truncate">
           <h1 class="slds-builder-header__item-label">
@@ -201,59 +178,7 @@ class BuilderHeader {
     `;
   }
   
-  renderTestViewLabel() {
-    const hasRunResults = this.config.runResultTimestamp !== null && this.config.runResultStatus !== null;
-    
-    if (hasRunResults) {
-      // Run Result view - show "Run Result: {name} mm/dd/yyyy, hh:mm AM" + "Completed" badge
-      const name = this.config.testScenarioView && this.config.testScenarioName 
-        ? this.config.testScenarioName 
-        : 'Test Flow';
-      
-      // Format date: mm/dd/yyyy, hh:mm AM/PM
-      const timestamp = this.config.runResultTimestamp instanceof Date 
-        ? this.config.runResultTimestamp 
-        : new Date(this.config.runResultTimestamp);
-      
-      const formattedDate = timestamp.toLocaleString('en-US', {
-        month: '2-digit',
-        day: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
-      
-      const title = `Run Result: ${name} ${formattedDate}`;
-      
-      return `
-        <span class="slds-truncate" title="${title}">
-          Run Result: ${name} ${formattedDate}
-        </span>
-        <span class="slds-badge slds-badge_success" style="margin-left: var(--slds-g-spacing-x-small, 0.5rem); background-color: var(--slds-g-color-success-base-50, #2e844a); color: var(--slds-g-color-neutral-base-100, #ffffff);">Completed</span>
-      `;
-    } else if (this.config.testScenarioView && this.config.testScenarioName) {
-      // Test Scenario Detail view (saved, not run) - show "Test Scenario: {name}"
-      const title = `Test Scenario: ${this.config.testScenarioName}`;
-      return `
-        <span class="slds-truncate" title="${title}">
-          Test Scenario: ${this.config.testScenarioName}
-        </span>
-      `;
-    } else {
-      // Test Flow view (no run results) - show "Test Flow"
-      return `
-        <span class="slds-truncate" title="Test Flow">
-          Test Flow
-        </span>
-      `;
-    }
-  }
-  
   renderToolbar() {
-    const buildSelected = this.config.buildMode === 'build' ? 'slds-is-selected' : '';
-    const testSelected = this.config.buildMode === 'test' ? 'slds-is-selected' : '';
-    
     return `
       <div class="slds-builder-toolbar" role="toolbar">
         <div class="builder-toolbar__left-group">
@@ -270,14 +195,6 @@ class BuilderHeader {
               </svg>
               <span class="slds-assistive-text">Errors and Warnings</span>
             </button>
-            ${this.config.buildMode === 'test' ? `
-            <button class="slds-button slds-button_icon slds-button_icon-border ${this.config.testScenariosOpen ? 'slds-is-selected' : ''}" title="Test Scenarios" data-action="testscenarios">
-              <svg class="slds-button__icon" aria-hidden="true">
-                <use href="#survey"></use>
-              </svg>
-              <span class="slds-assistive-text">Test Scenarios</span>
-            </button>
-            ` : ''}
           </div>
           <div class="slds-builder-toolbar__item-group builder-toolbar__canvas-group" aria-label="Canvas Actions">
           <button class="slds-button slds-button_icon slds-button_icon-border" title="Multi-Select" data-action="multiselect">
@@ -306,7 +223,6 @@ class BuilderHeader {
             </svg>
             <span class="slds-assistive-text">Canvas Settings</span>
           </button>
-          ${this.config.buildMode === 'build' ? `
           <div class="slds-form-element builder-toolbar__layout-select">
             <div class="slds-form-element__control">
               <div class="slds-select_container">
@@ -317,96 +233,26 @@ class BuilderHeader {
               </div>
             </div>
           </div>
-          ` : ''}
-          </div>
-        </div>
-        <div class="builder-toolbar__mode-switch">
-          <div class="slds-button-group" role="group">
-            <button 
-              class="slds-button slds-button_neutral slds-button_first ${buildSelected}" 
-              data-mode="build"
-              data-action="togglemode">
-              Build
-            </button>
-            <button 
-              class="slds-button slds-button_neutral slds-button_last ${testSelected}" 
-              data-mode="test"
-              data-action="togglemode">
-              Test
-            </button>
           </div>
         </div>
         <div class="slds-builder-toolbar__actions" aria-label="Document actions">
-          ${this.config.buildMode === 'build' ? `
           <div class="builder-header-status-info" style="display: flex; align-items: center; gap: 0.75rem; margin-right: 4px;">
             <span class="slds-text-body_small slds-text-color_weak">Last saved on ${this.formatLastSavedDate(this.config.lastSavedDate || new Date())}</span>
             <span class="slds-badge">${this.config.status}</span>
           </div>
-          ` : ''}
-          ${this.config.buildMode === 'test' ? `
-            ${this.config.testFlowView || this.config.testScenarioView ? `
-              ${this.config.testScenarioView ? `
-                <div class="slds-button-group" role="group">
-                  <button class="slds-button slds-button_neutral slds-button_first" data-action="save-test-scenario" ${this.config.saveButtonDisabled ? 'disabled' : ''}>Save Test Scenario</button>
-                  <div class="slds-dropdown-trigger slds-dropdown-trigger_click slds-button_last">
-                    <button class="slds-button slds-button_icon slds-button_icon-border-filled" aria-haspopup="true" aria-expanded="false" title="Show More" data-action="save-dropdown">
-                      <svg class="slds-button__icon" aria-hidden="true">
-                        <use href="#down"></use>
-                      </svg>
-                      <span class="slds-assistive-text">Show More</span>
-                    </button>
-                    <div class="slds-dropdown slds-dropdown_right slds-dropdown_length-5">
-                      <ul class="slds-dropdown__list" role="menu">
-                        <li class="slds-dropdown__item" role="presentation">
-                          <a href="javascript:void(0);" role="menuitem" data-action="save-as-new-scenario">
-                            <span class="slds-truncate" title="Save as New Scenario">Save as New Scenario</span>
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              ` : `
-                <button class="slds-button slds-button_neutral" data-action="save-test-scenario" ${this.config.saveButtonDisabled ? 'disabled' : ''}>Save as Test Scenario</button>
-              `}
-              <div class="slds-button-group" role="group">
-                <button class="slds-button ${this.config.testHasRun ? 'slds-button_neutral' : 'slds-button_brand'} slds-button_first" data-action="run-test">Run</button>
-                <div class="slds-dropdown-trigger slds-dropdown-trigger_click slds-button_last">
-                  <button class="slds-button slds-button_icon ${this.config.testHasRun ? 'slds-button_icon-border' : 'slds-button_icon-border-filled'}" aria-haspopup="true" aria-expanded="false" title="Show More" data-action="run-dropdown">
-                    <svg class="slds-button__icon" aria-hidden="true">
-                      <use href="#down"></use>
-                    </svg>
-                    <span class="slds-assistive-text">Show More</span>
-                  </button>
-                  <div class="slds-dropdown slds-dropdown_right slds-dropdown_length-5">
-                    <ul class="slds-dropdown__list" role="menu">
-                      <li class="slds-dropdown__item" role="presentation">
-                        <a href="javascript:void(0);" role="menuitem" data-action="start-new-run">
-                          <span class="slds-truncate" title="Start New Run">Start New Run</span>
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            ` : `
-              <button class="slds-button slds-button_neutral" data-action="testflow">Test Flow</button>
-            `}
-          ` : `
-            <div class="slds-button-group" role="group">
-              <button class="slds-button slds-button_neutral" data-action="saveasnewversion">Save as New Version</button>
-              <div class="slds-dropdown-trigger slds-dropdown-trigger_click slds-button_last">
-                <button class="slds-button slds-button_icon slds-button_icon-border-filled" aria-haspopup="true" aria-expanded="false" title="Show More">
-                  <svg class="slds-button__icon" aria-hidden="true">
-                    <use href="#down"></use>
-                  </svg>
-                  <span class="slds-assistive-text">Show More</span>
-                </button>
-              </div>
+          <div class="slds-button-group" role="group">
+            <button class="slds-button slds-button_neutral" data-action="saveasnewversion">Save as New Version</button>
+            <div class="slds-dropdown-trigger slds-dropdown-trigger_click slds-button_last">
+              <button class="slds-button slds-button_icon slds-button_icon-border-filled" aria-haspopup="true" aria-expanded="false" title="Show More">
+                <svg class="slds-button__icon" aria-hidden="true">
+                  <use href="#down"></use>
+                </svg>
+                <span class="slds-assistive-text">Show More</span>
+              </button>
             </div>
-            <button class="slds-button slds-button_neutral" data-action="save" ${this.config.buildSaveButtonDisabled ? 'disabled' : ''}>Save</button>
-            <button class="slds-button slds-button_brand" data-action="activate">Activate</button>
-          `}
+          </div>
+          <button class="slds-button slds-button_neutral" data-action="save" ${this.config.saveButtonDisabled ? 'disabled' : ''}>Save</button>
+          <button class="slds-button slds-button_brand" data-action="activate">Activate</button>
         </div>
       </div>
     `;
@@ -458,16 +304,6 @@ class BuilderHeader {
       case 'help':
         this.config.onHelp?.();
         break;
-      case 'togglemode':
-        const mode = e.target.closest('[data-mode]').dataset.mode;
-        this.config.buildMode = mode;
-        // When switching modes, ensure panel button states are preserved and UI is updated
-        this.render();
-        this.attachEventListeners();
-        // Update panel button states after render to ensure they're correct
-        this.updatePanelButtonStates();
-        this.config.onModeToggle?.(mode);
-        break;
       case 'toolbox':
         // Toggle toolbox state - if it's open, close it; if closed, open it and close others
         const newToolboxState = !this.config.toolboxOpen;
@@ -475,7 +311,6 @@ class BuilderHeader {
         this.config.toolboxOpen = newToolboxState;
         // Always close other panels (mutually exclusive)
         this.config.errorsOpen = false;
-        this.config.testScenariosOpen = false;
         // Update UI immediately - directly manipulate classes for immediate feedback
         this.updatePanelButtonStates();
         // Call callback
@@ -490,27 +325,11 @@ class BuilderHeader {
         this.config.errorsOpen = newErrorsState;
         // Always close other panels (mutually exclusive)
         this.config.toolboxOpen = false;
-        this.config.testScenariosOpen = false;
         // Update UI immediately - directly manipulate classes for immediate feedback
         this.updatePanelButtonStates();
         // Call callback
         if (this.config.onErrors) {
           this.config.onErrors(newErrorsState);
-        }
-        break;
-      case 'testscenarios':
-        // Toggle test scenarios state - if it's open, close it; if closed, open it and close others
-        const newTestScenariosState = !this.config.testScenariosOpen;
-        console.log('BuilderHeader: Test Scenarios clicked', { old: this.config.testScenariosOpen, new: newTestScenariosState });
-        this.config.testScenariosOpen = newTestScenariosState;
-        // Always close other panels (mutually exclusive)
-        this.config.toolboxOpen = false;
-        this.config.errorsOpen = false;
-        // Update UI immediately - directly manipulate classes for immediate feedback
-        this.updatePanelButtonStates();
-        // Call callback
-        if (this.config.onTestScenarios) {
-          this.config.onTestScenarios(newTestScenariosState);
         }
         break;
       case 'multiselect':
@@ -533,68 +352,6 @@ class BuilderHeader {
         break;
       case 'activate':
         this.config.onActivate?.();
-        break;
-      case 'testflow':
-        // Test Flow button clicked in test mode
-        this.config.onTestFlow?.();
-        break;
-      case 'save-test-scenario':
-        // Save as Test Scenario button clicked
-        this.config.onSaveTestScenario?.();
-        break;
-      case 'run-test':
-        // Run button clicked
-        this.config.onRunTest?.();
-        break;
-      case 'run-dropdown':
-      case 'save-dropdown':
-        // Toggle dropdown
-        const dropdownTrigger = e.target.closest('.slds-dropdown-trigger');
-        if (dropdownTrigger) {
-          const isOpen = dropdownTrigger.classList.contains('slds-is-open');
-          // Close all other dropdowns
-          this.container.querySelectorAll('.slds-dropdown-trigger').forEach(trigger => {
-            trigger.classList.remove('slds-is-open');
-            const button = trigger.querySelector('button');
-            if (button) {
-              button.setAttribute('aria-expanded', 'false');
-            }
-          });
-          // Toggle this dropdown
-          if (!isOpen) {
-            dropdownTrigger.classList.add('slds-is-open');
-            const button = dropdownTrigger.querySelector('button');
-            if (button) {
-              button.setAttribute('aria-expanded', 'true');
-            }
-          }
-        }
-        break;
-      case 'save-as-new-scenario':
-        // Save as New Scenario menu item clicked
-        e.stopPropagation(); // Prevent event from bubbling to dropdown trigger
-        // Close dropdown
-        this.container.querySelectorAll('.slds-dropdown-trigger').forEach(trigger => {
-          trigger.classList.remove('slds-is-open');
-          const button = trigger.querySelector('button');
-          if (button) {
-            button.setAttribute('aria-expanded', 'false');
-          }
-        });
-        this.config.onSaveAsNewScenario?.();
-        break;
-      case 'start-new-run':
-        // Start New Run menu item clicked
-        e.stopPropagation(); // Prevent event from bubbling to dropdown trigger
-        // Close dropdown
-        this.container.querySelectorAll('.slds-dropdown-trigger').forEach(trigger => {
-          trigger.classList.remove('slds-is-open');
-          const button = trigger.querySelector('button');
-          if (button) {
-            button.setAttribute('aria-expanded', 'false');
-          }
-        });
-        this.config.onStartNewRun?.();
         break;
       case 'layoutchange':
         // Layout mode select changed
@@ -669,7 +426,7 @@ class BuilderHeader {
     
     // Check if only panel button states changed - if so, update just the buttons without full re-render
     const onlyPanelStatesChanged = changedKeys.every(key => 
-      key === 'toolboxOpen' || key === 'errorsOpen' || key === 'testScenariosOpen'
+      key === 'toolboxOpen' || key === 'errorsOpen'
     );
     
     if (onlyLastSavedDateChanged) {
@@ -704,18 +461,6 @@ class BuilderHeader {
   
   setSaveButtonDisabled(disabled) {
     this.config.saveButtonDisabled = disabled;
-    const saveButton = this.container.querySelector('[data-action="save-test-scenario"]');
-    if (saveButton) {
-      if (disabled) {
-        saveButton.setAttribute('disabled', 'disabled');
-      } else {
-        saveButton.removeAttribute('disabled');
-      }
-    }
-  }
-  
-  setBuildSaveButtonDisabled(disabled) {
-    this.config.buildSaveButtonDisabled = disabled;
     const saveButton = this.container.querySelector('[data-action="save"]');
     if (saveButton) {
       if (disabled) {
@@ -724,45 +469,6 @@ class BuilderHeader {
         saveButton.removeAttribute('disabled');
       }
     }
-  }
-  
-  setTestHasRun(hasRun) {
-    this.config.testHasRun = hasRun;
-    const runButton = this.container.querySelector('[data-action="run-test"]');
-    if (runButton) {
-      // Update button class from brand to neutral or vice versa
-      if (hasRun) {
-        runButton.classList.remove('slds-button_brand');
-        runButton.classList.add('slds-button_neutral');
-      } else {
-        runButton.classList.remove('slds-button_neutral');
-        runButton.classList.add('slds-button_brand');
-      }
-    }
-    
-    // Update dropdown button style
-    const runDropdownButton = this.container.querySelector('[data-action="run-dropdown"]');
-    if (runDropdownButton) {
-      if (hasRun) {
-        runDropdownButton.classList.remove('slds-button_icon-border-filled');
-        runDropdownButton.classList.add('slds-button_icon-border');
-      } else {
-        runDropdownButton.classList.remove('slds-button_icon-border');
-        runDropdownButton.classList.add('slds-button_icon-border-filled');
-      }
-    }
-  }
-  
-  setRunResults(timestamp, status) {
-    this.config.runResultTimestamp = timestamp;
-    this.config.runResultStatus = status;
-    this.render();
-  }
-  
-  clearRunResults() {
-    this.config.runResultTimestamp = null;
-    this.config.runResultStatus = null;
-    this.render();
   }
   
   checkAndHideOverlappingButtons() {
@@ -886,16 +592,13 @@ class BuilderHeader {
     
     const toolboxButton = toolbar.querySelector('[data-action="toolbox"]');
     const errorsButton = toolbar.querySelector('[data-action="errors"]');
-    const testScenariosButton = toolbar.querySelector('[data-action="testscenarios"]');
     
     console.log('BuilderHeader: Updating panel button states', {
       toolboxOpen: this.config.toolboxOpen,
       errorsOpen: this.config.errorsOpen,
-      testScenariosOpen: this.config.testScenariosOpen,
       buttons: {
         toolbox: !!toolboxButton,
-        errors: !!errorsButton,
-        testScenarios: !!testScenariosButton
+        errors: !!errorsButton
       }
     });
     
@@ -914,15 +617,6 @@ class BuilderHeader {
         errorsButton.classList.add('slds-is-selected');
       } else {
         errorsButton.classList.remove('slds-is-selected');
-      }
-    }
-    
-    // Update test scenarios button (only exists in test mode)
-    if (testScenariosButton) {
-      if (this.config.testScenariosOpen) {
-        testScenariosButton.classList.add('slds-is-selected');
-      } else {
-        testScenariosButton.classList.remove('slds-is-selected');
       }
     }
   }

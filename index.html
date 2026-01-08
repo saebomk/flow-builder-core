@@ -188,16 +188,9 @@
           flowName: 'My Flow',
           showPageType: false,
           showHelp: true,
-          buildMode: 'build',
           onBack: () => console.log('Back clicked'),
           onFlowSelect: () => console.log('Flow select clicked'),
           onHelp: () => console.log('Help clicked'),
-          onModeToggle: (mode) => {
-            console.log('Mode toggled to:', mode);
-            if (flowCanvas) {
-              flowCanvas.updateConfig({ buildMode: mode });
-            }
-          },
           onToolbox: () => {
             if (flowPanelLeft) {
               if (flowPanelRight && flowPanelRight.isOpen()) {
@@ -232,7 +225,6 @@
       // Initialize Flow Canvas Component
       if (typeof FlowCanvas !== 'undefined') {
         flowCanvas = new FlowCanvas('#flow-canvas-container', {
-          buildMode: 'build',
           onNodeClick: (nodeId) => {
             console.log('Node clicked:', nodeId);
           },
@@ -244,7 +236,7 @@
               
               const node = flowCanvas.config.nodes.find(n => n.id === nodeId);
               const nodeType = node ? node.type.charAt(0).toUpperCase() + node.type.slice(1) : 'Element';
-              const content = flowCanvas.getNodePropertiesContent(nodeId);
+              const content = flowCanvas.getNodePropertiesContent ? flowCanvas.getNodePropertiesContent(nodeId) : `<div>Properties for ${nodeType}</div>`;
               
               if (flowPanelRight.isOpen()) {
                 flowPanelRight.setContent(content);
