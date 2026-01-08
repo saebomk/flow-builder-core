@@ -144,7 +144,6 @@ class FlowCanvas {
       if (canvasContent) {
         // Update only the canvas content, preserving panels
         canvasContent.innerHTML = this.renderNodes();
-        this.updateConnectorStyles();
       }
     }
     
