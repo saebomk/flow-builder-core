@@ -70,26 +70,6 @@ class BuilderHeader {
     const currentPageName = getCurrentPageName();
     
     this.container.innerHTML = `
-      <div class="slds-scoped-notification slds-scoped-notification_light" role="status">
-        <div class="slds-media">
-          <div class="slds-media__figure">
-            <span class="slds-icon_container slds-icon-utility-info slds-current-color" title="Information">
-              <svg class="slds-icon slds-icon_x-small" aria-hidden="true">
-                <use href="#info"></use>
-              </svg>
-              <span class="slds-assistive-text">Information</span>
-            </span>
-          </div>
-          <div class="slds-media__body" style="width: 100%; display: flex;">
-            <p style="display: flex; align-items: center; margin: 0; width: 100%; justify-content: space-between;">
-              <span style="height: 100%; text-align: left;">Flow Test Mode UX Prototype (Internal Only)</span>
-              <span style="text-align: right; margin-left: auto;">
-                Any feedback or questions? Share in <a href="https://salesforce.enterprise.slack.com/archives/C085BP04TDH" target="_blank" rel="noopener noreferrer" style="color: var(--slds-g-color-brand-base-50, #0176d3); text-decoration: none;">#automation-debug-test-collab</a>
-              </span>
-            </p>
-          </div>
-        </div>
-      </div>
       <div class="slds-builder-header_container">
         <header class="slds-builder-header">
           ${this.renderHeader()}

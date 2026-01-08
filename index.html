@@ -16,7 +16,7 @@
       body {
         margin: 0;
         padding: 0;
-        font-family: "Salesforce Sans", Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
         background-color: #f3f3f3 !important;
         min-height: 100vh;
         display: flex;
@@ -62,14 +62,24 @@
       }
       .slds-builder-toolbar {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: center;
         position: relative;
       }
-      .slds-builder-toolbar > div:nth-child(2) {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
+      .builder-toolbar__left-group {
+        display: flex;
+        flex: 1;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      .builder-toolbar__layout-select {
+        margin-left: 4px;
+      }
+      .slds-builder-toolbar__actions {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        margin-left: auto;
       }
       .toggle-btn.active {
         background-color: #0176d3;
@@ -160,6 +170,13 @@
               position: 'left',
               onClose: () => {
                 console.log('Left panel closed');
+                // Update header state when panel is closed
+                if (builderHeader) {
+                  builderHeader.updateConfig({ 
+                    toolboxOpen: false,
+                    errorsOpen: false 
+                  });
+                }
               }
             });
             
@@ -191,14 +208,9 @@
           onBack: () => console.log('Back clicked'),
           onFlowSelect: () => console.log('Flow select clicked'),
           onHelp: () => console.log('Help clicked'),
-          onToolbox: () => {
+          onToolbox: (isOpen) => {
             if (flowPanelLeft) {
-              if (flowPanelRight && flowPanelRight.isOpen()) {
-                flowPanelRight.close();
-              }
-              if (flowPanelLeft.isOpen()) {
-                flowPanelLeft.close();
-              } else {
+              if (isOpen) {
                 flowPanelLeft.open('left', 'Toolbox', `
                   <div class="flow-sidebar-content">
                     <div class="flow-sidebar-body">
@@ -207,10 +219,27 @@
                     </div>
                   </div>
                 `);
+              } else {
+                flowPanelLeft.close();
               }
             }
           },
-          onErrors: () => console.log('Errors clicked'),
+          onErrors: (isOpen) => {
+            if (flowPanelLeft) {
+              if (isOpen) {
+                flowPanelLeft.open('left', 'Errors and Warnings', `
+                  <div class="flow-sidebar-content">
+                    <div class="flow-sidebar-body">
+                      <h4>Errors and Warnings</h4>
+                      <p>No errors or warnings found</p>
+                    </div>
+                  </div>
+                `);
+              } else {
+                flowPanelLeft.close();
+              }
+            }
+          },
           onMultiSelect: () => console.log('Multi-select clicked'),
           onUndo: () => console.log('Undo clicked'),
           onRedo: () => console.log('Redo clicked'),
@@ -230,10 +259,6 @@
           },
           onNodeSelected: (nodeId) => {
             if (flowPanelRight && flowCanvas) {
-              if (flowPanelLeft && flowPanelLeft.isOpen()) {
-                flowPanelLeft.close();
-              }
-              
               const node = flowCanvas.config.nodes.find(n => n.id === nodeId);
               const nodeType = node ? node.type.charAt(0).toUpperCase() + node.type.slice(1) : 'Element';
               const content = flowCanvas.getNodePropertiesContent ? flowCanvas.getNodePropertiesContent(nodeId) : `<div>Properties for ${nodeType}</div>`;

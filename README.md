@@ -20,6 +20,10 @@ flow-builder
       └── flow-panel (right)
 ```
 
+## Development Guidelines
+
+- **Use SLDS 1 Components**: When developing new features or components, primarily use Salesforce Lightning Design System (SLDS) version 1 components or follow the established SLDS 1 patterns in the codebase for consistency with the Salesforce UI framework.
+
 ## Getting Started
 
 1. Install dependencies:
@@ -77,8 +81,3 @@ const flowPanel = new FlowPanel('#flow-panel-container', {
 
 flowPanel.open('right', 'Element Properties', '<div>Content</div>');
 ```
-
-## License
-
-MIT
-

@@ -288,7 +288,7 @@
 }
 
 .flow-node[data-node-id="start"] .flow-node-icon {
-  background-color: var(--slds-g-color-success-base-40, #0b827c) !important;
+  background-color: var(--slds-g-color-palette-teal-50, #0B827C) !important;
   border-radius: 9999px !important;
 }
 
@@ -359,9 +359,9 @@
 }
 
 .flow-node-badge-test-start {
-  background-color: var(--slds-g-color-brand-base-40, #0B827C); /* Using SLDS brand color token */
+  background-color: var(--slds-g-color-palette-teal-50, #0B827C); /* SLDS teal 50 color */
   color: var(--slds-g-color-neutral-base-100, white);
-  border-color: var(--slds-g-color-brand-base-40, #0B827C);
+  border-color: var(--slds-g-color-palette-teal-50, #0B827C);
 }
 
 .flow-node-badge-test-end {
@@ -629,7 +629,7 @@
 }
 
 .flow-connector-badge-start {
-  background-color: var(--slds-g-color-success-base-40, #0B827C); /* SLDS Teal 60 for test start point */
+  background-color: var(--slds-g-color-palette-teal-50, #0B827C); /* SLDS teal 50 for test start point */
   color: var(--slds-g-color-neutral-base-100, white);
 }
 
@@ -871,7 +871,7 @@
 }
 
 .flow-outputs-code-view .slds-textarea {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 0.875rem;
 }
 
@@ -907,5 +907,14 @@
 .slds-scoped-notification .slds-icon_container .slds-icon svg {
   width: 16px !important;
   height: 16px !important;
+}
+
+/* Builder Header Utilities Item Styles */
+.slds-builder-header__utilities-item {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
