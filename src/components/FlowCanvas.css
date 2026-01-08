@@ -1,0 +1,911 @@
+.flow-canvas-wrapper {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  /* Ensure wrapper has relative positioning for absolute child panels */
+}
+
+.flow-canvas-main {
+  flex: 1;
+  overflow: auto;
+  padding: 48px 24px;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  /* Canvas main should always take full width, panels overlay on top */
+  width: 100%;
+}
+
+.flow-canvas-wrapper.build-mode .flow-canvas-main {
+  background-color: var(--slds-g-color-neutral-base-95, #f3f3f3);
+  background-image: radial-gradient(circle, var(--slds-g-color-neutral-base-50, #706e6b) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: center center;
+  background-repeat: repeat;
+}
+
+.flow-canvas-wrapper.test-mode .flow-canvas-main {
+  background-color: var(--slds-g-color-neutral-base-80, #c9c9c9);
+  background-image: none;
+}
+
+.flow-panel-container {
+  width: 0;
+  overflow: hidden;
+  transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
+  background: var(--slds-g-color-neutral-base-100, #ffffff);
+  border: none;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 100;
+  box-shadow: none;
+  min-width: 400px;
+  max-width: 80vw;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.flow-panel-container.flow-panel-open {
+  border: 1px solid var(--slds-g-color-border-base-1, #dddbda);
+  box-shadow: var(--slds-g-shadow-2, 0 0 8px rgba(0, 0, 0, 0.15));
+  width: 400px; /* Default width, will be overridden by inline style when dragging */
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Slide in from left for left panel */
+.flow-canvas-wrapper > #flow-panel-left-container {
+  transform: translateX(-100%);
+}
+
+.flow-canvas-wrapper > #flow-panel-left-container.flow-panel-open {
+  transform: translateX(0);
+}
+
+/* Slide in from right for right panel */
+.flow-canvas-wrapper > #flow-panel-right-container {
+  transform: translateX(100%);
+}
+
+.flow-canvas-wrapper > #flow-panel-right-container.flow-panel-open {
+  transform: translateX(0);
+}
+
+.flow-panel-container.resizing {
+  transition: none; /* Disable transition while resizing */
+}
+
+/* Position left panel on the left side */
+.flow-canvas-wrapper > #flow-panel-left-container {
+  left: 0;
+}
+
+/* Position right panel on the right side */
+.flow-canvas-wrapper > #flow-panel-right-container {
+  right: 0;
+}
+
+.flow-canvas-content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100%;
+  background: unset;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Zoom controls - positioned in bottom-left corner */
+.flow-canvas-zoom-controls {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 200;
+  transition: left 0.3s ease-in-out;
+}
+
+/* Disable transition during panel resize for real-time movement */
+.flow-canvas-main .flow-canvas-zoom-controls.no-transition {
+  transition: none !important;
+}
+
+.flow-canvas-zoom-controls .slds-button-group {
+  box-shadow: none;
+  border-radius: 0.25rem;
+  background: white;
+  border: none;
+}
+
+.flow-nodes-container {
+  display: flex;
+  top: 1000px !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.flow-node {
+  position: relative;
+  z-index: 10;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+/* Boost z-index when dropdown is open to ensure it's on top of other nodes */
+.flow-node.dropdown-open {
+  z-index: 10001;
+}
+
+.flow-node:hover {
+  transform: translateY(-2px);
+}
+
+.flow-node.selected .flow-node-card {
+  border-color: var(--slds-g-color-brand-base-50, #0176d3);
+  box-shadow: 0px 0px 0px 2px var(--slds-g-color-brand-base-60, rgba(65, 148, 249, 0.4));
+}
+
+/* Gray out elements outside test scope */
+.flow-node-out-of-scope .flow-node-card {
+  background-color: var(--slds-g-color-neutral-base-90, #e5e5e5);
+}
+
+.flow-node-out-of-scope .flow-node-card:hover {
+  background-color: var(--slds-g-color-neutral-base-90, #e5e5e5); /* Keep same background on hover */
+}
+
+.flow-node-card {
+  background: var(--slds-g-color-neutral-base-100, #ffffff);
+  border: 1px solid var(--slds-g-color-neutral-base-80, #c9c9c9);
+  border-radius: var(--slds-g-radius-border-1, 0.25rem);
+  box-shadow: var(--slds-g-shadow-1, 0 2px 2px rgba(0, 0, 0, 0.1));
+  padding: 0;
+  min-width: 285px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.flow-node-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem; /* Using SLDS spacing scale */
+  padding: 0.75rem; /* Using SLDS spacing scale */
+  position: relative;
+  width: 100%;
+}
+
+/* Three-dot menu button - show on hover in both build and test mode */
+.flow-node-menu-trigger {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 100;
+  pointer-events: none;
+  width: fit-content;
+  margin-right: 12px;
+}
+
+/* Make all icon buttons in element cards 30px (SLDS medium size) */
+.flow-node-menu-trigger .slds-button_icon {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Show menu on hover of the node */
+.flow-node:hover .flow-node-menu-trigger {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Keep menu visible when dropdown is open or button is focused/hovered */
+.flow-node-menu-trigger:focus-within,
+.flow-node-menu-trigger:hover,
+.flow-node-menu-trigger:focus {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.flow-node-menu-dropdown[style*="block"] {
+  pointer-events: auto;
+}
+
+.flow-node-menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: var(--slds-g-spacing-xx-small, 0.25rem);
+  z-index: 10000;
+  min-width: 180px;
+  background: var(--slds-g-color-neutral-base-100, #ffffff);
+  box-shadow: var(--slds-g-shadow-2, 0 2px 3px 0 rgba(0, 0, 0, 0.16));
+  border: 1px solid var(--slds-g-color-border-base-1, #dddbda);
+  border-radius: var(--slds-g-radius-border-1, 0.25rem);
+  display: none;
+}
+
+.flow-node-menu-dropdown[style*="block"] {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.flow-node-menu-dropdown .slds-dropdown__list {
+  padding: 0.25rem 0;
+  margin: 0;
+  list-style: none;
+  display: block;
+}
+
+.flow-node-menu-dropdown .slds-dropdown__item {
+  display: block;
+}
+
+.flow-node-menu-dropdown .slds-dropdown__item a {
+  display: block;
+  padding: 0.5rem 0.75rem; /* Using SLDS spacing scale */
+  color: var(--slds-g-color-neutral-base-10, #080707);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Prevent clicks on disabled menu items */
+.flow-node-menu-dropdown .slds-dropdown__item a.slds-is-disabled,
+.flow-node-menu-dropdown .slds-dropdown__item a[aria-disabled="true"] {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.flow-node-menu-dropdown .slds-dropdown__item a:hover {
+  background-color: var(--slds-g-color-neutral-base-95, #f3f2f2);
+  color: var(--slds-g-color-neutral-base-10, #080707);
+}
+
+.flow-node-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.flow-node[data-node-id="start"] .flow-node-icon {
+  background-color: var(--slds-g-color-success-base-40, #0b827c) !important;
+  border-radius: 9999px !important;
+}
+
+.flow-node-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: white;
+  color: white;
+}
+
+.flow-node-icon svg use {
+  fill: white;
+}
+
+.flow-node-text {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  margin-right: 0px;
+}
+
+.flow-node-title {
+  font-weight: 700; /* Using SLDS font weight scale */
+  font-size: 0.8125rem; /* Using SLDS font size scale */
+  line-height: 1rem;
+  color: var(--slds-g-color-neutral-base-10, #181818);
+  margin-bottom: 0.125rem; /* Using SLDS spacing scale */
+  width: 100%;
+}
+
+.flow-node-subtitle {
+  font-size: 0.75rem; /* Using SLDS font size scale */
+  line-height: 1.125rem;
+  color: var(--slds-g-color-neutral-base-30, #444);
+  width: 100%;
+}
+
+.flow-node-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 0px;
+  padding-top: 0px;
+  padding-bottom: 12px;
+  padding-left: 12px;
+  padding-right: 12px;
+  border-top: 0px none transparent;
+  border-image: none;
+  justify-content: flex-start;
+  text-align: left;
+  width: fit-content;
+}
+
+.flow-node-badge {
+  background: var(--slds-g-color-neutral-base-100, white);
+  border: 1px solid var(--slds-g-color-border-base-4, #c9c9c9);
+  border-color: rgba(201, 201, 201, 1);
+  border-radius: 1.4375rem; /* Using SLDS border radius scale */
+  padding: 0.125rem 0.5rem; /* Using SLDS spacing scale */
+  font-weight: 700; /* Using SLDS font weight scale */
+  font-size: 0.75rem; /* Using SLDS font size scale */
+  line-height: 1.125rem;
+  color: var(--slds-g-color-neutral-base-10, #181818);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.flow-node-badge-test-start {
+  background-color: var(--slds-g-color-brand-base-40, #0B827C); /* Using SLDS brand color token */
+  color: var(--slds-g-color-neutral-base-100, white);
+  border-color: var(--slds-g-color-brand-base-40, #0B827C);
+}
+
+.flow-node-badge-test-end {
+  background-color: var(--slds-g-color-error-base-50, #ea001e); /* Using SLDS error color token */
+  color: var(--slds-g-color-neutral-base-100, white);
+  border-color: var(--slds-g-color-error-base-50, #ea001e);
+}
+
+.flow-node-badge .slds-icon {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.flow-connector {
+  position: relative;
+  width: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 5;
+}
+
+.flow-connector-line {
+  width: 2px;
+  background: #747474;
+  flex: 1;
+  min-height: 64px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+/* Connectors with badges should be 2x longer (treat badge like another element) */
+/* Split into two lines: above and below the badge */
+.flow-connector-with-badge {
+  min-height: 128px;
+}
+
+.flow-connector-with-badge .flow-connector-line-above {
+  flex: 0 0 64px;
+  min-height: 64px;
+}
+
+.flow-connector-with-badge .flow-connector-line-below {
+  flex: 0 0 64px;
+  min-height: 64px;
+}
+
+.flow-connector-line-executed {
+  width: 3px;
+  background: var(--slds-g-color-success-base-50, #2e844a) !important; /* Using SLDS success color token */
+}
+
+/* Path highlight styles for test scenarios */
+.flow-connector-line-passed {
+  width: 3px;
+  background: var(--slds-g-color-success-base-50, #2e844a) !important; /* Green for passed */
+}
+
+.flow-connector-line-failed,
+.flow-connector-line-error {
+  width: 3px;
+  background: var(--slds-g-color-error-base-40, #BA0517) !important; /* SLDS red 40 for failed/error */
+}
+
+.flow-connector-line-not-run {
+  width: 2px;
+  background: #747474 !important; /* Gray for not run */
+}
+
+/* For overlapping paths with multiple statuses */
+.flow-connector-line-multi {
+  position: relative;
+  width: 3px; /* Base width, we'll use pseudo-elements and box-shadow for additional colors */
+  overflow: visible;
+}
+
+/* Base background for multi-status lines - default to green if passed is present */
+.flow-connector-line-multi.flow-connector-line-passed {
+  background: var(--slds-g-color-success-base-50, #2e844a);
+}
+
+/* Red background only applies when passed is NOT present */
+.flow-connector-line-multi.flow-connector-line-failed:not(.flow-connector-line-passed),
+.flow-connector-line-multi.flow-connector-line-error:not(.flow-connector-line-passed) {
+  background: var(--slds-g-color-error-base-40, #BA0517);
+}
+
+/* When we have both passed and failed/error, render both colors side-by-side */
+/* Green line on the left, red line on the right */
+/* Use !important to ensure green background takes precedence */
+.flow-connector-line-multi[data-path-statuses*="passed"][data-path-statuses*="failed"],
+.flow-connector-line-multi[data-path-statuses*="passed"][data-path-statuses*="error"] {
+  background: var(--slds-g-color-success-base-50, #2e844a) !important;
+  /* Add red line to the right using box-shadow - creates visible overlap */
+  box-shadow: 3px 0 0 0 var(--slds-g-color-error-base-40, #BA0517);
+  width: 3px; /* Base line is green, shadow adds red */
+}
+
+/* Use ::after pseudo-element as additional method to ensure red line is visible */
+.flow-connector-line-multi[data-path-statuses*="passed"][data-path-statuses*="failed"]::after,
+.flow-connector-line-multi[data-path-statuses*="passed"][data-path-statuses*="error"]::after {
+  content: '';
+  position: absolute;
+  left: 3px; /* Position red line next to green line */
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--slds-g-color-error-base-40, #BA0517);
+  z-index: 1;
+}
+
+/* If we have both failed and error (but not passed), show red */
+.flow-connector-line-multi[data-path-statuses*="failed"][data-path-statuses*="error"]:not([data-path-statuses*="passed"]) {
+  background: var(--slds-g-color-error-base-40, #BA0517);
+  width: 3px;
+}
+
+/* If we have all three statuses (passed, failed, error), show green and red */
+.flow-connector-line-multi[data-path-statuses*="passed"][data-path-statuses*="failed"][data-path-statuses*="error"] {
+  background: var(--slds-g-color-success-base-50, #2e844a) !important;
+  box-shadow: 3px 0 0 0 var(--slds-g-color-error-base-40, #BA0517);
+  width: 3px;
+}
+
+/* For three statuses, ensure red line is visible with pseudo-element */
+.flow-connector-line-multi[data-path-statuses*="passed"][data-path-statuses*="failed"][data-path-statuses*="error"]::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--slds-g-color-error-base-40, #BA0517);
+  z-index: 1;
+}
+
+/* Path highlight legend */
+.path-highlight-legend {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  background: var(--slds-g-color-neutral-base-100, white);
+  border: 1px solid rgba(201, 201, 201, 1);
+  border-radius: 0.25rem;
+  box-shadow: var(--slds-g-shadow-2, 0 2px 3px 0 rgba(0, 0, 0, 0.16));
+  padding: 0.75rem 12px;
+  color: rgba(24, 24, 24, 1);
+  z-index: 1000;
+  min-width: 170px;
+  transition: left 0.3s ease-in-out;
+}
+
+/* Disable transition during panel resize for real-time movement */
+.flow-canvas-main .path-highlight-legend.no-transition {
+  transition: none !important;
+}
+
+.path-highlight-legend-header {
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: rgba(68, 68, 68, 1);
+  margin-bottom: 0.75rem;
+}
+
+.path-highlight-legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+.path-highlight-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.path-highlight-legend-line {
+  width: 24px;
+  height: 3px;
+  flex-shrink: 0;
+  border-radius: 1px;
+}
+
+.path-highlight-legend-line.path-highlight-legend-not-run {
+  background: #747474;
+  height: 2px;
+}
+
+.path-highlight-legend-line.path-highlight-legend-passed {
+  background: var(--slds-g-color-success-base-50, #2e844a);
+}
+
+.path-highlight-legend-line.path-highlight-legend-failed,
+.path-highlight-legend-line.path-highlight-legend-error {
+  background: var(--slds-g-color-error-base-40, #BA0517);
+}
+
+.path-highlight-legend-label {
+  font-size: 12px;
+  color: var(--slds-g-color-neutral-base-10, #181818);
+  line-height: 1.5;
+}
+
+.flow-connector-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #5c5c5c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.flow-connector-button:hover {
+  background: var(--slds-g-color-neutral-base-95, #f3f2f2);
+  border-color: var(--slds-g-color-brand-base-50, #0176d3);
+}
+
+.flow-canvas-wrapper.test-mode .flow-connector-button {
+  display: none !important;
+}
+
+/* Ensure menu is visible when hovering (both build and test mode) */
+.flow-canvas-wrapper .flow-node:hover .flow-node-menu-trigger {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.flow-connector-button svg {
+  width: 20px;
+  height: 20px;
+  fill: #0250D9;
+}
+
+.flow-connector-button svg use {
+  width: 12px;
+  height: 12px;
+}
+
+/* Start/End point badges on connector lines */
+.flow-connector-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 15;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.flow-connector-badge-start {
+  background-color: var(--slds-g-color-success-base-40, #0B827C); /* SLDS Teal 60 for test start point */
+  color: var(--slds-g-color-neutral-base-100, white);
+}
+
+.flow-connector-badge-end {
+  background-color: var(--slds-g-color-error-base-50, #ea001e); /* Using SLDS error color token */
+  color: var(--slds-g-color-neutral-base-100, white);
+}
+
+.flow-connector-badge .slds-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.flow-sidebar-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--slds-g-color-neutral-base-50, #747474);
+  font-size: 0.875rem; /* Using SLDS font size scale */
+}
+
+.flow-sidebar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Ensure SLDS form elements are properly styled within the panel */
+.flow-panel-body .slds-form-element {
+  margin-bottom: 0px;
+}
+
+.flow-panel-body .slds-form-element:last-child {
+  margin-bottom: 0;
+}
+
+/* Ensure inputs, selects, and textareas use full width within form control */
+.flow-panel-body .slds-form-element__control .slds-input,
+.flow-panel-body .slds-form-element__control .slds-select,
+.flow-panel-body .slds-form-element__control .slds-textarea {
+  width: 100%;
+}
+
+/* Style read-only inputs in test mode - follow SLDS read-only styling */
+.flow-panel-body .slds-form-element__control .slds-input[readonly],
+.flow-panel-body .slds-form-element__control .slds-input:read-only {
+  color: var(--slds-g-color-neutral-base-10, #080707);
+  cursor: default;
+}
+
+.flow-panel-body .slds-form-element__control .slds-input[readonly]:focus,
+.flow-panel-body .slds-form-element__control .slds-input:read-only:focus {
+  box-shadow: none;
+}
+
+/* Style disabled selects in test mode - follow SLDS disabled styling */
+.flow-panel-body .slds-form-element__control .slds-select[disabled] {
+  background-color: var(--slds-g-color-neutral-base-95, #ecebea);
+  border-color: var(--slds-g-color-border-base-3, #c9c7c5);
+  color: var(--slds-g-color-neutral-base-30, #3e3e3c);
+  cursor: not-allowed;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.flow-panel-body .slds-form-element__control .slds-select[disabled]:focus {
+  background-color: var(--slds-g-color-neutral-base-95, #ecebea);
+  border-color: var(--slds-g-color-border-base-3, #c9c7c5);
+  box-shadow: none;
+}
+
+/* Flow Node Properties Tabs - Use SLDS tabs */
+.flow-sidebar-content .slds-tabs_default {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.flow-sidebar-content .slds-tabs_default__nav {
+  padding: 0;
+  flex-shrink: 0;
+  height: 44px;
+}
+
+.flow-sidebar-content .slds-tabs_default__item {
+  height: 100%;
+}
+
+.flow-sidebar-content .slds-tabs_default__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  min-height: 0;
+}
+
+/* Specific padding override for outputs tab */
+#tab-outputs-start {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+#tab-outputs-create-task {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+#tab-outputs-update-case {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+#tab-outputs-send-email {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+#tab-outputs-end {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+/* Specific padding override for properties tab - consistent with general rule */
+#tab-properties-start {
+  padding: 1rem;
+}
+
+/* Form elements within properties tab */
+#tab-properties-start .slds-form-element {
+  margin-bottom: 0px;
+  padding-bottom: 0px;
+}
+
+.flow-node-outputs {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.flow-node-outputs-empty {
+  padding: 1rem;
+  text-align: center;
+  color: #706e6b;
+}
+
+/* Outputs tab header with toggle and view buttons */
+.flow-node-outputs-content .slds-grid_align-spread {
+  align-items: flex-start;
+  justify-content: center;
+  margin-bottom: 0.75rem; /* Using SLDS spacing scale */
+}
+
+/* Mock Outputs toggle styling */
+.flow-node-outputs-content .slds-checkbox_toggle {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.flow-node-outputs-content .slds-form-element__label {
+  margin-bottom: 0;
+  margin-right: 0.5rem;
+}
+
+.flow-node-outputs-content .slds-icon_container {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+/* View mode button group */
+.flow-node-outputs-content .slds-button-group {
+  margin-left: auto;
+}
+
+/* View mode button group selected state */
+.flow-node-outputs-content .slds-button-group .slds-button.slds-is-selected {
+  background-color: var(--slds-g-color-brand-base-50, #0176d3);
+  color: var(--slds-g-color-neutral-base-100, white);
+  border-color: var(--slds-g-color-brand-base-50, #0176d3);
+}
+
+.flow-node-outputs-content .slds-button-group .slds-button.slds-is-selected:hover {
+  background-color: var(--slds-g-color-brand-base-30, #014486);
+  border-color: var(--slds-g-color-brand-base-30, #014486);
+}
+
+.flow-node-outputs-content .slds-button-group .slds-button_icon-border:not(.slds-is-selected) {
+  color: #747474;
+}
+
+.flow-node-outputs-content .slds-button-group .slds-button_icon-border:not(.slds-is-selected) .slds-button__icon {
+  fill: #747474;
+}
+
+.flow-node-outputs-content .slds-button-group .slds-button_icon-border:not(.slds-is-selected) .slds-button__icon use {
+  fill: #747474;
+}
+
+.flow-node-outputs-content .slds-button-group .slds-button_icon-border:not(.slds-is-selected):hover {
+  background-color: var(--slds-g-color-neutral-base-95, #f3f2f2);
+}
+
+/* Scoped notification banner */
+.flow-node-outputs-content .slds-scoped-notification {
+  margin-bottom: 1rem;
+}
+
+/* Resource view container */
+.flow-outputs-resource-view {
+  padding: 0.5rem; /* Using SLDS spacing scale */
+  background-color: var(--slds-g-color-neutral-base-98, #fafafa);
+  overflow: hidden;
+  border-radius: 0.25rem; /* Using SLDS border radius scale */
+}
+
+/* Resource view fields */
+.flow-outputs-resource-view .slds-form-element {
+  margin-bottom: 0.75rem;
+  height: fit-content;
+}
+
+/* Form element in outputs header grid - remove margin-bottom */
+.flow-node-outputs-content .slds-grid_align-spread > .slds-form-element {
+  margin-bottom: 0;
+}
+
+.flow-outputs-resource-view .slds-form-element:last-child {
+  margin-bottom: 0;
+}
+
+/* Code view */
+.flow-outputs-code-view {
+  padding: 0.5rem; /* Using SLDS spacing scale */
+  overflow: hidden;
+  background-color: var(--slds-g-color-neutral-base-98, #fafafa);
+  border-radius: 0.25rem; /* Using SLDS border radius scale */
+}
+
+.flow-outputs-code-view .slds-textarea {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+  font-size: 0.875rem;
+}
+
+/* Header and Configuration Panel Icon Button Sizes - Ensure 16px */
+/* Header toolbar icon buttons - all icon buttons in the builder toolbar */
+.slds-builder-toolbar .slds-button_icon .slds-button__icon {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.slds-builder-toolbar .slds-button_icon .slds-button__icon svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Header action icons (back, builder, page, help, chevron, etc.) */
+.slds-builder-header .slds-icon_container .slds-icon {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.slds-builder-header .slds-icon_container .slds-icon svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Scoped notification icon in header */
+.slds-scoped-notification .slds-icon_container .slds-icon {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.slds-scoped-notification .slds-icon_container .slds-icon svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+

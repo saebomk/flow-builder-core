@@ -1,0 +1,23 @@
+{
+  "name": "flow-builder-core",
+  "version": "1.0.0",
+  "description": "Core components for Salesforce Flow Builder: Header, Canvas, and Panels",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server -p 8080 -c-1",
+    "dev": "npx http-server -p 8080 -c-1"
+  },
+  "keywords": [
+    "salesforce",
+    "flow",
+    "builder",
+    "canvas",
+    "components"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
+

@@ -1,0 +1,157 @@
+.flow-panel {
+  width: 100%;
+  height: 100%;
+  background: var(--slds-g-color-neutral-base-100, #ffffff);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.flow-panel-left {
+  border-right: 1px solid var(--slds-g-color-border-base-1, #dddbda);
+  box-shadow: var(--slds-g-shadow-2, 2px 0 4px rgba(0, 0, 0, 0.1));
+}
+
+.flow-panel-right {
+  border-left: 1px solid var(--slds-g-color-border-base-1, #dddbda);
+  box-shadow: var(--slds-g-shadow-2, -2px 0 4px rgba(0, 0, 0, 0.1));
+}
+
+.flow-panel-header {
+  display: flex;
+  align-items: center;
+  gap: var(--slds-g-spacing-x-small, 0.5rem);
+  padding: var(--slds-g-spacing-small, 0.75rem) var(--slds-g-spacing-medium, 1rem);
+  border-bottom: 1px solid var(--slds-g-color-border-base-1, #c9c9c9);
+  background: var(--slds-g-color-neutral-base-100, #ffffff);
+  flex-shrink: 0;
+  height: 44px;
+}
+
+.flow-panel-title-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--slds-g-radius-border-1, 0.25rem);
+  margin-right: 0;
+}
+
+.flow-panel-title-icon .slds-icon {
+  width: 16px;
+  height: 16px;
+  fill: var(--slds-g-color-neutral-base-100, #ffffff);
+  color: var(--slds-g-color-neutral-base-100, #ffffff);
+}
+
+.flow-panel-title-icon .slds-icon use {
+  fill: var(--slds-g-color-neutral-base-100, #ffffff);
+}
+
+.flow-panel-title {
+  margin: 0;
+  font-size: 1rem; /* Using SLDS font size scale */
+  font-weight: 400;
+  color: var(--slds-g-color-neutral-base-10, #181818);
+  flex: 1;
+}
+
+h3.flow-panel-title {
+  font-weight: 400;
+}
+
+/* SLDS button icons are styled by SLDS, but we can add custom spacing if needed */
+.flow-panel-header .slds-button-icon {
+  flex-shrink: 0;
+}
+
+.flow-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--slds-g-spacing-small, 0.75rem);
+}
+
+/* Remove padding for panels with tabs (Test Flow, Test Scenario, Element Configuration) */
+/* Element Configuration panel - has flow-sidebar-content with tabs */
+.flow-panel-body:has(.flow-sidebar-content) {
+  padding: 0;
+}
+
+/* Test Flow and Test Scenario panels - have test-panel with tabs */
+.flow-panel-body:has(.test-panel) {
+  padding: 0;
+}
+
+/* Test Scenarios List view panel - has test-scenario-list */
+.flow-panel-body:has(.test-scenario-list) {
+  padding: 0;
+}
+
+/* Fallback: if flow-sidebar-content or test-panel is a direct child, remove parent padding */
+.flow-panel-body > .flow-sidebar-content ~ *,
+.flow-panel-body > .test-panel ~ * {
+  /* Reset any margin that might be needed */
+}
+
+/* Ensure child elements with tabs don't inherit unwanted padding */
+.flow-panel-body .flow-sidebar-content,
+.flow-panel-body .test-panel {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Drag Handle Styles */
+.flow-panel-drag-handle {
+  position: absolute;
+  height: 24px;
+  width: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: unset;
+  border: 0px none rgba(0, 0, 0, 0);
+  border-image: none;
+  box-sizing: content-box;
+  cursor: col-resize;
+  z-index: 101;
+  user-select: none;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.flow-panel-drag-handle-left {
+}
+
+.flow-panel-drag-handle-right {
+  right: 0px;
+}
+
+.flow-panel-drag-handle .slds-icon {
+  fill: var(--slds-g-color-neutral-base-50, #706e6b);
+  color: var(--slds-g-color-neutral-base-50, #706e6b);
+  pointer-events: none;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.flow-panel-drag-handle:hover .slds-icon {
+  fill: var(--slds-g-color-brand-base-50, #0176d3);
+  color: var(--slds-g-color-brand-base-50, #0176d3);
+}
+
+/* Configuration panel close button icon - ensure 16px */
+.flow-panel-header .slds-button_icon .slds-button__icon,
+.flow-panel-header .slds-button_icon .slds-icon {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.flow-panel-header .slds-button_icon .slds-button__icon svg,
+.flow-panel-header .slds-button_icon .slds-icon svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+

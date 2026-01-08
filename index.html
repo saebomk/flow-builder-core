@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flow Builder Core - Demo</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@salesforce-ux/design-system@2.28.1/assets/styles/salesforce-lightning-design-system.min.css"
+    />
+    <style>
+      html {
+        background-color: #f3f3f3 !important;
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Salesforce Sans", Arial, sans-serif;
+        background-color: #f3f3f3 !important;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        width: 100%;
+      }
+      #main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: transparent;
+        min-height: 0;
+        overflow: hidden;
+        position: relative;
+      }
+      #builder-header-container {
+        flex-shrink: 0;
+        width: 100%;
+        position: relative;
+        z-index: 1;
+        background: white;
+      }
+      #builder-header-container .slds-builder-header_container {
+        position: relative !important;
+      }
+      #builder-header-container .slds-builder-header {
+        position: relative !important;
+      }
+      #builder-header-container .slds-builder-toolbar {
+        position: relative !important;
+      }
+      #flow-canvas-container {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 0;
+        margin-top: 0;
+      }
+      .slds-builder-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+      }
+      .slds-builder-toolbar > div:nth-child(2) {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .toggle-btn.active {
+        background-color: #0176d3;
+        color: white;
+        border-color: #0176d3;
+      }
+      .toggle-btn.active:hover {
+        background-color: #014486;
+        border-color: #014486;
+      }
+      .toggle-btn:not(.active) {
+        background-color: white;
+        color: #080707;
+      }
+      .toggle-btn:not(.active):hover {
+        background-color: #f3f2f2;
+      }
+    </style>
+    <link rel="stylesheet" href="src/components/FlowCanvas.css" />
+    <link rel="stylesheet" href="src/components/FlowPanel.css" />
+    <!-- Load SLDS Icon Sprites from CDN -->
+    <object
+      data="https://cdn.jsdelivr.net/npm/@salesforce-ux/design-system@2.28.1/assets/icons/utility-sprite/svg/symbols.svg"
+      type="image/svg+xml"
+      style="position: absolute; width: 0; height: 0; visibility: hidden"
+    >
+    </object>
+    <object
+      data="https://cdn.jsdelivr.net/npm/@salesforce-ux/design-system@2.28.1/assets/icons/standard-sprite/svg/symbols.svg"
+      type="image/svg+xml"
+      style="position: absolute; width: 0; height: 0; visibility: hidden"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg">
+        <symbol id="close_x" viewBox="0 0 100 100">
+          <path d="M30 30l40 40M70 30l-40 40" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        </symbol>
+      </svg>
+    </object>
+    <script>
+      // Load SLDS icon sprites from CDN
+      (function () {
+        const loadSprite = (url) => {
+          return fetch(url)
+            .then((response) => {
+              if (!response.ok) throw new Error(`HTTP ${response.status}`);
+              return response.text();
+            })
+            .then((svg) => {
+              const div = document.createElement("div");
+              div.innerHTML = svg;
+              div.style.cssText = "position: absolute; width: 0; height: 0; visibility: hidden;";
+              document.body.insertBefore(div, document.body.firstChild);
+            });
+        };
+        
+        Promise.all([
+          loadSprite("https://cdn.jsdelivr.net/npm/@salesforce-ux/design-system@2.28.1/assets/icons/utility-sprite/svg/symbols.svg"),
+          loadSprite("https://cdn.jsdelivr.net/npm/@salesforce-ux/design-system@2.28.1/assets/icons/standard-sprite/svg/symbols.svg")
+        ]).catch((err) => {
+          console.warn("Could not load SLDS icons from CDN:", err);
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="main">
+      <div id="builder-header-container"></div>
+      <div id="flow-canvas-container"></div>
+    </div>
+
+    <script src="src/components/BuilderHeader.js"></script>
+    <script src="src/components/FlowCanvas.js"></script>
+    <script src="src/components/FlowPanel.js"></script>
+    <script>
+      let flowPanelLeft = null;
+      let flowPanelRight = null;
+      let builderHeader = null;
+      let flowCanvas = null;
+      
+      // Initialize Flow Panel Components (after canvas is rendered)
+      function initFlowPanels() {
+        if (typeof FlowPanel !== 'undefined') {
+          const leftPanelContainer = document.querySelector('#flow-panel-left-container');
+          const rightPanelContainer = document.querySelector('#flow-panel-right-container');
+          
+          if (leftPanelContainer && rightPanelContainer) {
+            flowPanelLeft = new FlowPanel('#flow-panel-left-container', {
+              position: 'left',
+              onClose: () => {
+                console.log('Left panel closed');
+              }
+            });
+            
+            flowPanelRight = new FlowPanel('#flow-panel-right-container', {
+              position: 'right',
+              onClose: () => {
+                console.log('Right panel closed');
+              }
+            });
+            
+            window.flowPanelLeft = flowPanelLeft;
+            window.flowPanelRight = flowPanelRight;
+            console.log('FlowPanels initialized');
+          } else {
+            setTimeout(initFlowPanels, 100);
+          }
+        }
+      }
+      
+      setTimeout(initFlowPanels, 100);
+      
+      // Initialize Builder Header Component
+      if (typeof BuilderHeader !== 'undefined') {
+        builderHeader = new BuilderHeader('#builder-header-container', {
+          appName: 'Flow Builder',
+          flowName: 'My Flow',
+          showPageType: false,
+          showHelp: true,
+          buildMode: 'build',
+          onBack: () => console.log('Back clicked'),
+          onFlowSelect: () => console.log('Flow select clicked'),
+          onHelp: () => console.log('Help clicked'),
+          onModeToggle: (mode) => {
+            console.log('Mode toggled to:', mode);
+            if (flowCanvas) {
+              flowCanvas.updateConfig({ buildMode: mode });
+            }
+          },
+          onToolbox: () => {
+            if (flowPanelLeft) {
+              if (flowPanelRight && flowPanelRight.isOpen()) {
+                flowPanelRight.close();
+              }
+              if (flowPanelLeft.isOpen()) {
+                flowPanelLeft.close();
+              } else {
+                flowPanelLeft.open('left', 'Toolbox', `
+                  <div class="flow-sidebar-content">
+                    <div class="flow-sidebar-body">
+                      <h4>Toolbox</h4>
+                      <p>Add flow elements from the toolbox</p>
+                    </div>
+                  </div>
+                `);
+              }
+            }
+          },
+          onErrors: () => console.log('Errors clicked'),
+          onMultiSelect: () => console.log('Multi-select clicked'),
+          onUndo: () => console.log('Undo clicked'),
+          onRedo: () => console.log('Redo clicked'),
+          onCanvasSettings: () => console.log('Canvas settings clicked'),
+          onSaveAsNewVersion: () => console.log('Save as new version clicked'),
+          onSave: () => console.log('Save clicked'),
+          onActivate: () => console.log('Activate clicked')
+        });
+        window.builderHeader = builderHeader;
+      }
+      
+      // Initialize Flow Canvas Component
+      if (typeof FlowCanvas !== 'undefined') {
+        flowCanvas = new FlowCanvas('#flow-canvas-container', {
+          buildMode: 'build',
+          onNodeClick: (nodeId) => {
+            console.log('Node clicked:', nodeId);
+          },
+          onNodeSelected: (nodeId) => {
+            if (flowPanelRight && flowCanvas) {
+              if (flowPanelLeft && flowPanelLeft.isOpen()) {
+                flowPanelLeft.close();
+              }
+              
+              const node = flowCanvas.config.nodes.find(n => n.id === nodeId);
+              const nodeType = node ? node.type.charAt(0).toUpperCase() + node.type.slice(1) : 'Element';
+              const content = flowCanvas.getNodePropertiesContent(nodeId);
+              
+              if (flowPanelRight.isOpen()) {
+                flowPanelRight.setContent(content);
+                flowPanelRight.setTitle(nodeType);
+              } else {
+                flowPanelRight.open('right', nodeType, content, null, node?.icon, node?.iconBg);
+              }
+            }
+          },
+          onConnectorClick: (index) => {
+            console.log('Connector clicked at index:', index);
+          }
+        });
+        window.flowCanvas = flowCanvas;
+      }
+    </script>
+  </body>
+</html>
+
