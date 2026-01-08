@@ -1635,8 +1635,8 @@ class FlowCanvas {
   
   updateConfig(newConfig) {
     this.config = { ...this.config, ...newConfig };
-    // Only re-render if necessary (e.g., mode change)
-    if (newConfig.buildMode !== undefined) {
+    // Re-render if nodes changed
+    if (newConfig.nodes !== undefined) {
       this.render();
     }
   }
