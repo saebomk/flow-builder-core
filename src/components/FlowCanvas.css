@@ -21,11 +21,7 @@
 }
 
 .flow-canvas-wrapper.build-mode .flow-canvas-main {
-  background-color: var(--slds-g-color-neutral-base-95, #f3f3f3);
-  background-image: radial-gradient(circle, var(--slds-g-color-neutral-base-50, #706e6b) 1px, transparent 1px);
-  background-size: 32px 32px;
-  background-position: center center;
-  background-repeat: repeat;
+  background-color: var(--slds-g-color-neutral-base-95, #F3F3F3);
 }
 
 .flow-canvas-wrapper.test-mode .flow-canvas-main {

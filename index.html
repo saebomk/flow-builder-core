@@ -65,21 +65,41 @@
         justify-content: flex-start;
         align-items: center;
         position: relative;
+        overflow: hidden;
+        min-width: 0;
       }
       .builder-toolbar__left-group {
         display: flex;
         flex: 1;
         gap: 0.5rem;
         align-items: center;
+        min-width: 0;
+        overflow: hidden;
       }
       .builder-toolbar__layout-select {
         margin-left: 4px;
+        flex-shrink: 0;
       }
       .slds-builder-toolbar__actions {
         display: flex;
         gap: 4px;
         align-items: center;
         margin-left: auto;
+        flex-shrink: 0;
+        overflow: hidden;
+        min-width: 0;
+      }
+      /* Prevent button text wrapping */
+      .slds-builder-toolbar .slds-button {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .slds-builder-toolbar__actions .slds-button-group {
+        flex-shrink: 0;
+      }
+      .builder-header-status-info {
+        flex-shrink: 0;
+        white-space: nowrap;
       }
       .toggle-btn.active {
         background-color: #0176d3;

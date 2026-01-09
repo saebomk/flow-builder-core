@@ -48,8 +48,7 @@ class BuilderHeader {
     this._cachedFormattedDate = null;
     this._cachedDateTimestamp = null;
     
-    // Throttle overlap detection to improve performance
-    this._overlapDetectionPending = false;
+    // Removed throttling to allow immediate button visibility updates
     
     this.render();
     this.attachEventListeners();
@@ -452,78 +451,71 @@ class BuilderHeader {
   }
   
   checkAndHideOverlappingButtons() {
-    // Throttle overlap detection to avoid excessive calculations
-    if (this._overlapDetectionPending) return;
-    this._overlapDetectionPending = true;
+    const toolbar = this.container.querySelector('.slds-builder-toolbar');
+    if (!toolbar) return;
     
-    // Use requestAnimationFrame to ensure layout is complete
-    requestAnimationFrame(() => {
-      this._overlapDetectionPending = false;
-      
-      const toolbar = this.container.querySelector('.slds-builder-toolbar');
-      if (!toolbar) return;
-      
-      const modeSwitch = toolbar.querySelector('.builder-toolbar__mode-switch');
-      if (!modeSwitch) return;
-      
-      const leftGroup = toolbar.querySelector('.builder-toolbar__left-group');
-      const actionsGroup = toolbar.querySelector('.slds-builder-toolbar__actions');
-      
-      // Get mode switch boundaries
-      const modeSwitchRect = modeSwitch.getBoundingClientRect();
-      const toolbarRect = toolbar.getBoundingClientRect();
-      
-      // Calculate mode switch position relative to toolbar
-      const modeSwitchLeft = modeSwitchRect.left - toolbarRect.left;
-      const modeSwitchRight = modeSwitchRect.right - toolbarRect.left;
-      
-      // Check left group buttons - iterate through item groups
-      if (leftGroup) {
-        const leftButtons = Array.from(leftGroup.querySelectorAll('.slds-builder-toolbar__item-group'));
-        
-        // First, ensure all button groups are visible to get accurate measurements
-        leftButtons.forEach((buttonGroup) => {
-          buttonGroup.style.display = '';
-        });
-        
-        // Force a reflow to ensure positions are calculated
-        void toolbar.offsetHeight;
-        
-        // Now check overlaps and hide as needed
-        leftButtons.forEach((buttonGroup) => {
-          const buttonRect = buttonGroup.getBoundingClientRect();
-          const buttonRight = buttonRect.right - toolbarRect.left;
-          
-          // If button group extends past the left edge of mode switch, hide it
-          if (buttonRight > modeSwitchLeft) {
-            buttonGroup.style.display = 'none';
-          }
-        });
-      }
-      
-      // Check right actions group buttons - iterate through direct children
-      if (actionsGroup) {
-        // First, ensure all buttons are visible to get accurate measurements
-        const actionButtons = Array.from(actionsGroup.children);
-        actionButtons.forEach((button) => {
-          button.style.display = '';
-        });
-        
-        // Force a reflow to ensure positions are calculated
-        void toolbar.offsetHeight;
-        
-        // Now check overlaps and hide as needed
-        actionButtons.forEach((button) => {
-          const buttonRect = button.getBoundingClientRect();
-          const buttonLeft = buttonRect.left - toolbarRect.left;
-          
-          // If button extends past the right edge of mode switch, hide it
-          if (buttonLeft < modeSwitchRight) {
-            button.style.display = 'none';
-          }
-        });
-      }
+    const leftGroup = toolbar.querySelector('.builder-toolbar__left-group');
+    const actionsGroup = toolbar.querySelector('.slds-builder-toolbar__actions');
+    
+    if (!leftGroup || !actionsGroup) return;
+    
+    // Ensure all left group buttons are always visible
+    if (leftGroup) {
+      const leftButtons = Array.from(leftGroup.querySelectorAll('.slds-builder-toolbar__item-group'));
+      leftButtons.forEach((buttonGroup) => {
+        buttonGroup.style.display = '';
+      });
+    }
+    
+    // First, immediately show all action buttons to check if they fit
+    const actionButtons = Array.from(actionsGroup.children);
+    actionButtons.forEach((button) => {
+      button.style.display = '';
     });
+    
+    // Force a reflow to ensure positions are calculated
+    void toolbar.offsetHeight;
+    
+    const toolbarRect = toolbar.getBoundingClientRect();
+    const toolbarWidth = toolbarRect.width;
+    
+    // Get the left group's right edge
+    const leftGroupRect = leftGroup.getBoundingClientRect();
+    const leftGroupRight = leftGroupRect.right - toolbarRect.left;
+    
+    // Calculate available space for actions group
+    const availableSpace = toolbarWidth - leftGroupRight;
+    
+    // Calculate total width needed for actions group
+    let totalActionsWidth = 0;
+    const buttonWidths = actionButtons.map((button) => {
+      const rect = button.getBoundingClientRect();
+      const width = rect.width;
+      totalActionsWidth += width;
+      return { button, width };
+    });
+    
+    // Add gap spacing (4px between buttons)
+    const gapSpacing = (actionButtons.length - 1) * 4;
+    totalActionsWidth += gapSpacing;
+    
+    // If actions group would overflow, hide buttons from the right
+    if (totalActionsWidth > availableSpace) {
+      let accumulatedWidth = 0;
+      // Hide buttons from right to left until they fit
+      for (let i = buttonWidths.length - 1; i >= 0; i--) {
+        const { button, width } = buttonWidths[i];
+        accumulatedWidth += width;
+        if (i < buttonWidths.length - 1) {
+          accumulatedWidth += 4; // Add gap
+        }
+        
+        if (accumulatedWidth > availableSpace) {
+          button.style.display = 'none';
+        }
+      }
+    }
+    // If there's enough space, all buttons are already visible (set above)
   }
   
   initializeOverlapDetection() {
@@ -546,7 +538,9 @@ class BuilderHeader {
     }, 0);
     
     // Set up ResizeObserver to watch for toolbar width changes
+    // Use immediate callback to show buttons right away when space becomes available
     this.resizeObserver = new ResizeObserver(() => {
+      // Call immediately without throttling to show buttons as soon as space is available
       this.checkAndHideOverlappingButtons();
     });
     

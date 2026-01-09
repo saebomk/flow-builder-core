@@ -1858,18 +1858,12 @@ class FlowCanvas {
       content.style.transform = `scale(${this.zoomLevel})`;
       content.style.transformOrigin = 'center center';
       
-      // Also scale the background dots (both size and spacing) from the same focal point
+      // Remove background dots - use solid background color only
       if (wrapper && wrapper.classList.contains('build-mode')) {
-        const baseBackgroundSize = 32;
-        const baseDotSize = 1;
-        const scaledSize = baseBackgroundSize * this.zoomLevel;
-        const scaledDotSize = baseDotSize * this.zoomLevel;
-        canvasMain.style.backgroundSize = `${scaledSize}px ${scaledSize}px`;
-        // Update the dot size in the radial gradient
-        canvasMain.style.backgroundImage = `radial-gradient(circle, #A0A0A0 ${scaledDotSize}px, transparent ${scaledDotSize}px)`;
-        // Ensure background is positioned from center to maintain same focal point
-        canvasMain.style.backgroundPosition = 'center center';
-        canvasMain.style.backgroundRepeat = 'repeat';
+        canvasMain.style.backgroundImage = 'none';
+        canvasMain.style.backgroundSize = '';
+        canvasMain.style.backgroundPosition = '';
+        canvasMain.style.backgroundRepeat = '';
       } else if (wrapper && wrapper.classList.contains('test-mode')) {
         // In test mode, explicitly clear background image and size to prevent dots from appearing
         canvasMain.style.backgroundImage = 'none';
