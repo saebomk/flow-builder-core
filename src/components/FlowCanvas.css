@@ -12,7 +12,7 @@
 .flow-canvas-main {
   flex: 1;
   overflow: auto;
-  padding: 48px 24px;
+  padding: var(--slds-g-spacing-large, 3rem) var(--slds-g-spacing-medium, 1.5rem);
   position: relative;
   min-width: 0;
   min-height: 0;
@@ -42,7 +42,7 @@
   bottom: 0;
   z-index: 100;
   box-shadow: none;
-  min-width: 400px;
+  min-width: var(--slds-g-size-content-width-medium, 25rem);
   max-width: 80vw;
   visibility: hidden;
   opacity: 0;
@@ -51,7 +51,7 @@
 .flow-panel-container.flow-panel-open {
   border: 1px solid var(--slds-g-color-border-base-1, #dddbda);
   box-shadow: var(--slds-g-shadow-2, 0 0 8px rgba(0, 0, 0, 0.15));
-  width: 400px; /* Default width, will be overridden by inline style when dragging */
+  width: var(--slds-g-size-content-width-medium, 25rem); /* Default width, will be overridden by inline style when dragging */
   visibility: visible;
   opacity: 1;
 }
@@ -100,8 +100,8 @@
 /* Zoom controls - positioned in bottom-left corner */
 .flow-canvas-zoom-controls {
   position: absolute;
-  bottom: 24px;
-  left: 24px;
+  bottom: var(--slds-g-spacing-medium, 1.5rem);
+  left: var(--slds-g-spacing-medium, 1.5rem);
   z-index: 200;
   transition: left 0.3s ease-in-out;
 }
@@ -113,8 +113,8 @@
 
 .flow-canvas-zoom-controls .slds-button-group {
   box-shadow: none;
-  border-radius: 0.25rem;
-  background: white;
+  border-radius: var(--slds-g-radius-border-1, 0.25rem);
+  background: var(--slds-g-color-neutral-base-100, #ffffff);
   border: none;
 }
 
@@ -145,15 +145,6 @@
 .flow-node.selected .flow-node-card {
   border-color: var(--slds-g-color-brand-base-50, #0176d3);
   box-shadow: 0px 0px 0px 2px var(--slds-g-color-brand-base-60, rgba(65, 148, 249, 0.4));
-}
-
-/* Gray out elements outside test scope */
-.flow-node-out-of-scope .flow-node-card {
-  background-color: var(--slds-g-color-neutral-base-90, #e5e5e5);
-}
-
-.flow-node-out-of-scope .flow-node-card:hover {
-  background-color: var(--slds-g-color-neutral-base-90, #e5e5e5); /* Keep same background on hover */
 }
 
 .flow-node-card {
@@ -190,13 +181,13 @@
   z-index: 100;
   pointer-events: none;
   width: fit-content;
-  margin-right: 12px;
+  margin-right: var(--slds-g-spacing-small, 0.75rem);
 }
 
 /* Make all icon buttons in element cards 30px (SLDS medium size) */
 .flow-node-menu-trigger .slds-button_icon {
-  width: 30px;
-  height: 30px;
+  width: var(--slds-g-size-icon-medium, 1.875rem);
+  height: var(--slds-g-size-icon-medium, 1.875rem);
   padding: 0;
   display: flex;
   align-items: center;
@@ -227,7 +218,7 @@
   top: 100%;
   margin-top: var(--slds-g-spacing-xx-small, 0.25rem);
   z-index: 10000;
-  min-width: 180px;
+  min-width: var(--slds-g-size-content-width-small, 11.25rem);
   background: var(--slds-g-color-neutral-base-100, #ffffff);
   box-shadow: var(--slds-g-shadow-2, 0 2px 3px 0 rgba(0, 0, 0, 0.16));
   border: 1px solid var(--slds-g-color-border-base-1, #dddbda);
@@ -242,7 +233,7 @@
 }
 
 .flow-node-menu-dropdown .slds-dropdown__list {
-  padding: 0.25rem 0;
+  padding: var(--slds-g-spacing-xx-small, 0.25rem) 0;
   margin: 0;
   list-style: none;
   display: block;
@@ -274,9 +265,9 @@
 }
 
 .flow-node-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 4px;
+  width: var(--slds-g-size-icon-medium, 1.875rem);
+  height: var(--slds-g-size-icon-medium, 1.875rem);
+  border-radius: var(--slds-g-radius-border-1, 0.25rem);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -285,18 +276,18 @@
 
 .flow-node[data-node-id="start"] .flow-node-icon {
   background-color: var(--slds-g-color-palette-teal-50, #0B827C) !important;
-  border-radius: 9999px !important;
+  border-radius: var(--slds-g-radius-border-circle, 50%) !important;
 }
 
 .flow-node-icon svg {
-  width: 20px;
-  height: 20px;
-  fill: white;
-  color: white;
+  width: var(--slds-g-size-icon-small, 1.25rem);
+  height: var(--slds-g-size-icon-small, 1.25rem);
+  fill: var(--slds-g-color-neutral-base-100, #ffffff);
+  color: var(--slds-g-color-neutral-base-100, #ffffff);
 }
 
 .flow-node-icon svg use {
-  fill: white;
+  fill: var(--slds-g-color-neutral-base-100, #ffffff);
 }
 
 .flow-node-text {
@@ -307,31 +298,31 @@
 }
 
 .flow-node-title {
-  font-weight: 700; /* Using SLDS font weight scale */
-  font-size: 0.8125rem; /* Using SLDS font size scale */
-  line-height: 1rem;
+  font-weight: var(--slds-g-font-weight-bold, 700);
+  font-size: var(--slds-g-font-size-3, 0.8125rem);
+  line-height: var(--slds-g-line-height-heading, 1rem);
   color: var(--slds-g-color-neutral-base-10, #181818);
-  margin-bottom: 0.125rem; /* Using SLDS spacing scale */
+  margin-bottom: var(--slds-g-spacing-xx-small, 0.125rem);
   width: 100%;
 }
 
 .flow-node-subtitle {
-  font-size: 0.75rem; /* Using SLDS font size scale */
-  line-height: 1.125rem;
-  color: var(--slds-g-color-neutral-base-30, #444);
+  font-size: var(--slds-g-font-size-2, 0.75rem);
+  line-height: var(--slds-g-line-height-text, 1.125rem);
+  color: var(--slds-g-color-neutral-base-30, #444444);
   width: 100%;
 }
 
 .flow-node-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 0px;
-  padding-top: 0px;
-  padding-bottom: 12px;
-  padding-left: 12px;
-  padding-right: 12px;
-  border-top: 0px none transparent;
+  gap: var(--slds-g-spacing-xx-small, 0.25rem);
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: var(--slds-g-spacing-small, 0.75rem);
+  padding-left: var(--slds-g-spacing-small, 0.75rem);
+  padding-right: var(--slds-g-spacing-small, 0.75rem);
+  border-top: 0 none transparent;
   border-image: none;
   justify-content: flex-start;
   text-align: left;
@@ -339,42 +330,30 @@
 }
 
 .flow-node-badge {
-  background: var(--slds-g-color-neutral-base-100, white);
+  background: var(--slds-g-color-neutral-base-100, #ffffff);
   border: 1px solid var(--slds-g-color-border-base-4, #c9c9c9);
-  border-color: rgba(201, 201, 201, 1);
-  border-radius: 1.4375rem; /* Using SLDS border radius scale */
-  padding: 0.125rem 0.5rem; /* Using SLDS spacing scale */
-  font-weight: 700; /* Using SLDS font weight scale */
-  font-size: 0.75rem; /* Using SLDS font size scale */
-  line-height: 1.125rem;
+  border-radius: var(--slds-g-radius-border-pill, 1.4375rem);
+  padding: var(--slds-g-spacing-xx-small, 0.125rem) var(--slds-g-spacing-x-small, 0.5rem);
+  font-weight: var(--slds-g-font-weight-bold, 700);
+  font-size: var(--slds-g-font-size-2, 0.75rem);
+  line-height: var(--slds-g-line-height-text, 1.125rem);
   color: var(--slds-g-color-neutral-base-10, #181818);
   white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--slds-g-spacing-xx-small, 0.25rem);
 }
 
-.flow-node-badge-test-start {
-  background-color: var(--slds-g-color-palette-teal-50, #0B827C); /* SLDS teal 50 color */
-  color: var(--slds-g-color-neutral-base-100, white);
-  border-color: var(--slds-g-color-palette-teal-50, #0B827C);
-}
-
-.flow-node-badge-test-end {
-  background-color: var(--slds-g-color-error-base-50, #ea001e); /* Using SLDS error color token */
-  color: var(--slds-g-color-neutral-base-100, white);
-  border-color: var(--slds-g-color-error-base-50, #ea001e);
-}
 
 .flow-node-badge .slds-icon {
-  width: 12px;
-  height: 12px;
+  width: var(--slds-g-size-icon-xx-small, 0.75rem);
+  height: var(--slds-g-size-icon-xx-small, 0.75rem);
   fill: currentColor;
 }
 
 .flow-connector {
   position: relative;
-  width: 24px;
+  width: var(--slds-g-size-icon-small, 1.5rem);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -383,27 +362,12 @@
 
 .flow-connector-line {
   width: 2px;
-  background: #747474;
+  background: var(--slds-g-color-neutral-base-50, #747474);
   flex: 1;
-  min-height: 64px;
+  min-height: var(--slds-g-size-content-height-large, 4rem);
   transition: width 0.3s ease, background-color 0.3s ease;
 }
 
-/* Connectors with badges should be 2x longer (treat badge like another element) */
-/* Split into two lines: above and below the badge */
-.flow-connector-with-badge {
-  min-height: 128px;
-}
-
-.flow-connector-with-badge .flow-connector-line-above {
-  flex: 0 0 64px;
-  min-height: 64px;
-}
-
-.flow-connector-with-badge .flow-connector-line-below {
-  flex: 0 0 64px;
-  min-height: 64px;
-}
 
 .flow-connector-line-executed {
   width: 3px;
@@ -424,7 +388,7 @@
 
 .flow-connector-line-not-run {
   width: 2px;
-  background: #747474 !important; /* Gray for not run */
+  background: var(--slds-g-color-neutral-base-50, #747474) !important; /* Gray for not run */
 }
 
 /* For overlapping paths with multiple statuses */
@@ -497,16 +461,16 @@
 /* Path highlight legend */
 .path-highlight-legend {
   position: absolute;
-  top: 24px;
-  left: 24px;
-  background: var(--slds-g-color-neutral-base-100, white);
-  border: 1px solid rgba(201, 201, 201, 1);
-  border-radius: 0.25rem;
+  top: var(--slds-g-spacing-medium, 1.5rem);
+  left: var(--slds-g-spacing-medium, 1.5rem);
+  background: var(--slds-g-color-neutral-base-100, #ffffff);
+  border: 1px solid var(--slds-g-color-border-base-4, #c9c9c9);
+  border-radius: var(--slds-g-radius-border-1, 0.25rem);
   box-shadow: var(--slds-g-shadow-2, 0 2px 3px 0 rgba(0, 0, 0, 0.16));
-  padding: 0.75rem 12px;
-  color: rgba(24, 24, 24, 1);
+  padding: var(--slds-g-spacing-small, 0.75rem) var(--slds-g-spacing-small, 0.75rem);
+  color: var(--slds-g-color-neutral-base-10, #181818);
   z-index: 1000;
-  min-width: 170px;
+  min-width: var(--slds-g-size-content-width-small, 10.625rem);
   transition: left 0.3s ease-in-out;
 }
 
@@ -516,10 +480,10 @@
 }
 
 .path-highlight-legend-header {
-  font-weight: 700;
-  font-size: 0.8125rem;
-  color: rgba(68, 68, 68, 1);
-  margin-bottom: 0.75rem;
+  font-weight: var(--slds-g-font-weight-bold, 700);
+  font-size: var(--slds-g-font-size-3, 0.8125rem);
+  color: var(--slds-g-color-neutral-base-30, #444444);
+  margin-bottom: var(--slds-g-spacing-small, 0.75rem);
 }
 
 .path-highlight-legend-items {
@@ -535,14 +499,14 @@
 }
 
 .path-highlight-legend-line {
-  width: 24px;
+  width: var(--slds-g-size-icon-small, 1.5rem);
   height: 3px;
   flex-shrink: 0;
-  border-radius: 1px;
+  border-radius: var(--slds-g-radius-border-1, 0.25rem);
 }
 
 .path-highlight-legend-line.path-highlight-legend-not-run {
-  background: #747474;
+  background: var(--slds-g-color-neutral-base-50, #747474);
   height: 2px;
 }
 
@@ -556,9 +520,9 @@
 }
 
 .path-highlight-legend-label {
-  font-size: 12px;
+  font-size: var(--slds-g-font-size-2, 0.75rem);
   color: var(--slds-g-color-neutral-base-10, #181818);
-  line-height: 1.5;
+  line-height: var(--slds-g-line-height-text, 1.5);
 }
 
 .flow-connector-button {
@@ -566,18 +530,18 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: white;
-  border: 1px solid #5c5c5c;
+  width: var(--slds-g-size-icon-small, 1.5rem);
+  height: var(--slds-g-size-icon-small, 1.5rem);
+  border-radius: var(--slds-g-radius-border-circle, 50%);
+  background: var(--slds-g-color-neutral-base-100, #ffffff);
+  border: 1px solid var(--slds-g-color-neutral-base-40, #5c5c5c);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 10;
-  padding-left: 5px;
-  padding-right: 5px;
+  padding-left: var(--slds-g-spacing-xx-small, 0.3125rem);
+  padding-right: var(--slds-g-spacing-xx-small, 0.3125rem);
 }
 
 .flow-connector-button:hover {
@@ -596,14 +560,14 @@
 }
 
 .flow-connector-button svg {
-  width: 20px;
-  height: 20px;
-  fill: #0250D9;
+  width: var(--slds-g-size-icon-small, 1.25rem);
+  height: var(--slds-g-size-icon-small, 1.25rem);
+  fill: var(--slds-g-color-brand-base-50, #0176d3);
 }
 
 .flow-connector-button svg use {
-  width: 12px;
-  height: 12px;
+  width: var(--slds-g-size-icon-xx-small, 0.75rem);
+  height: var(--slds-g-size-icon-xx-small, 0.75rem);
 }
 
 /* Start/End point badges on connector lines */
@@ -614,29 +578,19 @@
   transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 9999px;
-  font-size: 13px;
-  font-weight: 600;
+  gap: var(--slds-g-spacing-x-small, 0.625rem);
+  padding: var(--slds-g-spacing-small, 0.75rem) var(--slds-g-spacing-medium, 1rem);
+  border-radius: var(--slds-g-radius-border-pill, 9999px);
+  font-size: var(--slds-g-font-size-3, 0.8125rem);
+  font-weight: var(--slds-g-font-weight-semibold, 600);
   white-space: nowrap;
   z-index: 15;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
-.flow-connector-badge-start {
-  background-color: var(--slds-g-color-palette-teal-50, #0B827C); /* SLDS teal 50 for test start point */
-  color: var(--slds-g-color-neutral-base-100, white);
-}
-
-.flow-connector-badge-end {
-  background-color: var(--slds-g-color-error-base-50, #ea001e); /* Using SLDS error color token */
-  color: var(--slds-g-color-neutral-base-100, white);
+  box-shadow: var(--slds-g-shadow-1, 0 2px 2px rgba(0, 0, 0, 0.1));
 }
 
 .flow-connector-badge .slds-icon {
-  width: 16px;
-  height: 16px;
+  width: var(--slds-g-size-icon-x-small, 1rem);
+  height: var(--slds-g-size-icon-x-small, 1rem);
   fill: currentColor;
 }
 
@@ -644,9 +598,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 200px;
+  height: var(--slds-g-size-content-height-x-large, 12.5rem);
   color: var(--slds-g-color-neutral-base-50, #747474);
-  font-size: 0.875rem; /* Using SLDS font size scale */
+  font-size: var(--slds-g-font-size-3, 0.875rem);
 }
 
 .flow-sidebar-body {
@@ -725,52 +679,10 @@
   min-height: 0;
 }
 
-/* Specific padding override for outputs tab */
-#tab-outputs-start {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
-#tab-outputs-create-task {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
-#tab-outputs-update-case {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
-#tab-outputs-send-email {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
-#tab-outputs-end {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
-/* Specific padding override for properties tab - consistent with general rule */
-#tab-properties-start {
-  padding: 1rem;
-}
-
-/* Form elements within properties tab */
-#tab-properties-start .slds-form-element {
-  margin-bottom: 0px;
-  padding-bottom: 0px;
-}
 
 .flow-node-outputs {
   padding-top: 0;
   padding-bottom: 0;
-}
-
-.flow-node-outputs-empty {
-  padding: 1rem;
-  text-align: center;
-  color: #706e6b;
 }
 
 /* Outputs tab header with toggle and view buttons */
@@ -815,15 +727,15 @@
 }
 
 .flow-node-outputs-content .slds-button-group .slds-button_icon-border:not(.slds-is-selected) {
-  color: #747474;
+  color: var(--slds-g-color-neutral-base-50, #747474);
 }
 
 .flow-node-outputs-content .slds-button-group .slds-button_icon-border:not(.slds-is-selected) .slds-button__icon {
-  fill: #747474;
+  fill: var(--slds-g-color-neutral-base-50, #747474);
 }
 
 .flow-node-outputs-content .slds-button-group .slds-button_icon-border:not(.slds-is-selected) .slds-button__icon use {
-  fill: #747474;
+  fill: var(--slds-g-color-neutral-base-50, #747474);
 }
 
 .flow-node-outputs-content .slds-button-group .slds-button_icon-border:not(.slds-is-selected):hover {
@@ -860,15 +772,15 @@
 
 /* Code view */
 .flow-outputs-code-view {
-  padding: 0.5rem; /* Using SLDS spacing scale */
+  padding: var(--slds-g-spacing-x-small, 0.5rem);
   overflow: hidden;
   background-color: var(--slds-g-color-neutral-base-98, #fafafa);
-  border-radius: 0.25rem; /* Using SLDS border radius scale */
+  border-radius: var(--slds-g-radius-border-1, 0.25rem);
 }
 
 .flow-outputs-code-view .slds-textarea {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.875rem;
+  font-size: var(--slds-g-font-size-3, 0.875rem);
 }
 
 /* Header and Configuration Panel Icon Button Sizes - Ensure 16px */
@@ -910,7 +822,7 @@
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-left: var(--slds-g-spacing-xx-small, 0.5rem);
+  padding-right: var(--slds-g-spacing-xx-small, 0.5rem);
 }
 
