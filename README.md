@@ -1,4 +1,4 @@
-# Flow Builder Core
+# Flow Builder Base Template
 
 Core components for Salesforce Flow Builder UI: Builder Header, Flow Canvas, and Flow Panels.
 
